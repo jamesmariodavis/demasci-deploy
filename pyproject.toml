@@ -1,0 +1,11 @@
+[tool.poetry]
+name = "base_python"
+version = "0.0.1"
+description = "Base Python Skeleton"
+authors = ["James Davis <jamesmariodavis@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.7.1"
+yapf = "^0.31.0"
+
+[tool.poetry.dev-dependencies]
