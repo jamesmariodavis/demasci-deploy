@@ -1,4 +1,4 @@
-FROM python:3.7.5-slim-buster
+FROM python:3.8.11-slim-buster
 
 # define build path and set to working directory
 # build path is used to install dependencies in image
