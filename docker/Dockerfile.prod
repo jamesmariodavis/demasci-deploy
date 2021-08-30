@@ -1,0 +1,54 @@
+FROM python:3.8.11-slim-buster
+
+# define build path and set to working directory
+# build path is used to install dependencies in image
+ENV BUILD_PATH /build/
+WORKDIR ${BUILD_PATH}
+
+# install system dependencies
+RUN apt-get update && \
+    apt-get install --no-install-recommends -y \
+    gcc \
+    python3-psutil \
+    libpq-dev \
+    curl \
+    build-essential && \
+    rm -rf /var/lib/apt/lists/*
+
+# copy files for poetry install
+COPY pyproject.toml ${BUILD_PATH}/pyproject.toml
+COPY poetry.lock ${BUILD_PATH}/poetry.lock
+
+# update pip to speed up poetry
+RUN pip install --upgrade pip
+
+# poetry stuff
+ENV PYTHONUNBUFFERED=1 \
+    POETRY_VERSION=1.1.6 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=off \
+    PIP_DISABLE_PIP_VERSION_CHECK=on \
+    PIP_DEFAULT_TIMEOUT=100 \
+    POETRY_HOME="/opt/poetry" \
+    POETRY_VIRTUALENVS_IN_PROJECT=false \
+    POETRY_VIRTUALENVS_CREATE=false \
+    POETRY_NO_INTERACTION=1
+
+ENV PATH="${PATH}:/root/.local/bin"
+
+# Install Poetry and update path - respects $POETRY_VERSION & $POETRY_HOME
+RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
+ENV PATH="${PATH}:${POETRY_HOME}/bin"
+
+# install python
+RUN poetry install --no-dev
+
+# clean up build
+WORKDIR /
+RUN rm -rf ${BUILD_PATH}
+
+# copy code and set work directory
+ENV DEPLOY_PATH /app/
+WORKDIR ${DEPLOY_PATH}
+ENV PYTHONPATH=${DEPLOY_PATH}
+COPY . /${DEPLOY_PATH}/
