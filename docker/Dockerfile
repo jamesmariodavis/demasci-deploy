@@ -4,11 +4,6 @@ FROM python:3.7.5-slim-buster
 # build path is used to install dependencies in image
 ENV BUILD_PATH /build/
 WORKDIR ${BUILD_PATH}
-COPY pyproject.toml ${BUILD_PATH}/pyproject.toml
-COPY poetry.lock ${BUILD_PATH}/poetry.lock
-
-# update pip to speed up poetry
-RUN pip install --upgrade pip
 
 # install system dependencies
 RUN apt-get update && \
@@ -22,6 +17,13 @@ RUN apt-get update && \
     git \
     build-essential && \
     rm -rf /var/lib/apt/lists/*
+
+# copy files for poetry install
+COPY pyproject.toml ${BUILD_PATH}/pyproject.toml
+COPY poetry.lock ${BUILD_PATH}/poetry.lock
+
+# update pip to speed up poetry
+RUN pip install --upgrade pip
 
 # poetry stuff
 ENV PYTHONUNBUFFERED=1 \
@@ -43,13 +45,6 @@ ENV PATH="${PATH}:${POETRY_HOME}/bin"
 
 # install python
 RUN poetry install
-
-# install aws-cli
-RUN curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip" \
-    && unzip awscli-bundle.zip \
-    && ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
-# copy credentials for aws cli
-COPY docker/.aws /root/.aws
 
 # clean up build
 WORKDIR /

@@ -1,3 +1,1 @@
-'''
-this is some cool stuff whoa
-'''
+print('hi')
