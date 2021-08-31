@@ -41,7 +41,7 @@ elif [ "$SCRIPT_ACTION_ARG" = "--enter-container-dev" ]; then
     --rm \
     --net=host \
     --workdir=/${APP_NAME} \
-    --env PYTHONPATH=${APP_NAME} \
+    --env PYTHONPATH=/${APP_NAME} \
     --volume ${ABSOLUTE_PATH}:/${APP_NAME} \
     ${DEV_IMAGE_NAME}:latest \
     /bin/bash
