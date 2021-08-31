@@ -40,9 +40,9 @@ elif [ "$SCRIPT_ACTION_ARG" = "--enter-container-dev" ]; then
     --entrypoint="" \
     --rm \
     --net=host \
-    --workdir=/${CONTAINING_DIR} \
-    --env PYTHONPATH=/${CONTAINING_DIR} \
-    --volume ${ABSOLUTE_PATH}:/${CONTAINING_DIR} \
+    --workdir=/app \
+    --env PYTHONPATH=/app \
+    --volume ${ABSOLUTE_PATH}:/app \
     ${DEV_IMAGE_NAME}:latest \
     /bin/bash
 elif [ "$SCRIPT_ACTION_ARG" = "--enter-container-prod" ]; then
