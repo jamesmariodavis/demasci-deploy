@@ -6,7 +6,7 @@ SCRIPT_ACTION_ARG=$1
 APP_NAME_ARG=$2
 # retreive absolute path and directory
 ABSOLUTE_PATH=$(pwd)
-THIS_DIR="$(dirname "$0")"
+CONTAINING_DIR="$(basename ${ABSOLUTE_PATH})"
 # set image names relative to app names
 DEV_IMAGE_NAME=${APP_NAME}_dev
 PROD_IMAGE_NAME=${APP_NAME}_prod
@@ -40,9 +40,9 @@ elif [ "$SCRIPT_ACTION_ARG" = "--enter-container-dev" ]; then
     --entrypoint="" \
     --rm \
     --net=host \
-    --workdir=/${APP_NAME} \
-    --env PYTHONPATH=/${APP_NAME} \
-    --volume ${ABSOLUTE_PATH}:/${APP_NAME} \
+    --workdir=/${CONTAINING_DIR} \
+    --env PYTHONPATH=/${CONTAINING_DIR} \
+    --volume ${ABSOLUTE_PATH}:/${CONTAINING_DIR} \
     ${DEV_IMAGE_NAME}:latest \
     /bin/bash
 elif [ "$SCRIPT_ACTION_ARG" = "--enter-container-prod" ]; then
