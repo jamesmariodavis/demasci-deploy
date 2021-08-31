@@ -1,11 +1,12 @@
+# set app name. change this, and only this, to localize to new app
+$APP_NAME="python_base"
 # get paramaeters passed by user
 $PASSED_PARAMETER=$args[0]
-# setup constants
-$APP_NAME="python_base"
-$DEV_IMAGE_NAME="${APP_NAME}_dev"
-$PROD_IMAGE_NAME="${APP_NAME}_prod"
 # retreive absolute path
 $ABSOLUTE_PATH=Get-Location
+# set image names relative to app name
+$DEV_IMAGE_NAME="${APP_NAME}_dev"
+$PROD_IMAGE_NAME="${APP_NAME}_prod"
 
 
 if ($PASSED_PARAMETER -eq 'build-dev-image'){
@@ -45,4 +46,7 @@ elseif ($PASSED_PARAMETER -eq "enter-prod-container") {
         ${PROD_IMAGE_NAME}:latest `
         /bin/bash
     }
+}
+else {
+    Write-Output "option ${PASSED_PARAMETER} not found"
 }

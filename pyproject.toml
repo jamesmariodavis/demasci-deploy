@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "base_python"
+name = "python_base"
 version = "0.0.1"
 description = "Base Python Skeleton"
 authors = ["James Davis <jamesmariodavis@gmail.com>"]
