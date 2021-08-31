@@ -2,7 +2,7 @@
 // https://github.com/microsoft/vscode-dev-containers/tree/v0.187.0/containers/python-3
 {
 	"name": "python_base_vscode",
-	"image": "python_base:latest",
+	"image": "python_base_dev:latest",
 	"containerEnv": {"PYTHONPATH": "/workspaces/python_base"},
 
 	// Set *default* container specific settings.json values on container create.
@@ -10,7 +10,10 @@
 		"python.pythonPath": "/usr/local/bin/python",
 		"python.languageServer": "Pylance",
 		"python.linting.enabled": true,
-		"python.linting.pylintEnabled": true
+		"python.linting.pylintEnabled": true,
+		"python.linting.pylintPath": "pylint",
+		"editor.formatOnSave": true,
+		"python.formatting.provider": "yapf",
 	},
 
 	// Add the IDs of extensions you want installed when the container is created.
@@ -27,5 +30,6 @@
 	// Use 'postCreateCommand' to run commands after the container is created.
 	// "postCreateCommand": "pip3 install --user -r requirements.txt",
 
-	"runArgs": ["--env-file","docker/env_file"]
+	// Use 'runArgs' to customize docker run command.
+	// "runArgs": []
 }
