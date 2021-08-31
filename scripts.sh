@@ -6,7 +6,7 @@ SCRIPT_ACTION_ARG=$1
 APP_NAME_ARG=$2
 # retreive absolute path and directory
 ABSOLUTE_PATH=$(pwd)
-THIS_DIR="$(dirname "$0")"
+CONTAINING_DIR="$(basename ${ABSOLUTE_PATH})"
 # set image names relative to app names
 DEV_IMAGE_NAME=${APP_NAME}_dev
 PROD_IMAGE_NAME=${APP_NAME}_prod
@@ -26,26 +26,26 @@ function update_line_in_file() {
     fi
 }
 
-if [ "$SCRIPT_ACTION_ARG" = "build-image-dev" ]; then
+if [ "$SCRIPT_ACTION_ARG" = "--build-image-dev" ]; then
     docker build \
     --tag ${DEV_IMAGE_NAME}:latest \
     --file docker/Dockerfile.dev .
-elif [ "$SCRIPT_ACTION_ARG" = "build-image-prod" ]; then
+elif [ "$SCRIPT_ACTION_ARG" = "--build-image-prod" ]; then
     docker build \
     --tag ${PROD_IMAGE_NAME}:latest \
     --file docker/Dockerfile.prod .
-elif [ "$SCRIPT_ACTION_ARG" = "enter-container-dev" ]; then
+elif [ "$SCRIPT_ACTION_ARG" = "--enter-container-dev" ]; then
     docker run \
     -it \
     --entrypoint="" \
     --rm \
     --net=host \
-    --workdir=/${APP_NAME} \
-    --env PYTHONPATH=${APP_NAME} \
-    --volume ${ABSOLUTE_PATH}:/${APP_NAME} \
+    --workdir=/${CONTAINING_DIR} \
+    --env PYTHONPATH=/${CONTAINING_DIR} \
+    --volume ${ABSOLUTE_PATH}:/${CONTAINING_DIR} \
     ${DEV_IMAGE_NAME}:latest \
     /bin/bash
-elif [ "$SCRIPT_ACTION_ARG" = "enter-container-prod" ]; then
+elif [ "$SCRIPT_ACTION_ARG" = "--enter-container-prod" ]; then
     docker run -it \
     --entrypoint="" \
     --rm \
@@ -53,7 +53,7 @@ elif [ "$SCRIPT_ACTION_ARG" = "enter-container-prod" ]; then
     --workdir=/app \
     ${PROD_IMAGE_NAME}:latest \
     /bin/bash
-elif [ "$SCRIPT_ACTION_ARG" = "set-app-name" ]; then
+elif [ "$SCRIPT_ACTION_ARG" = "--set-app-name" ]; then
     if [ -z "$APP_NAME_ARG" ]; then
         printf "must pass app name as second arg\n"
         exit 1
