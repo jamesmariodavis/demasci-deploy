@@ -1,11 +1,14 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
 // https://github.com/microsoft/vscode-dev-containers/tree/v0.187.0/containers/python-3
+// For advanced configuration, see https://code.visualstudio.com/docs/remote/containers-advanced
 {
 	"name": "${localWorkspaceFolderBasename}_vscode",
 	"image": "python_base_dev:latest",
 	"containerEnv": {
-		"PYTHONPATH": "/workspaces/${localWorkspaceFolderBasename}"
+		"PYTHONPATH": "/app"
 	},
+	"workspaceMount": "source=${localWorkspaceFolder},target=/app,type=bind,consistency=delegated",
+	"workspaceFolder": "/app",
 	// Set *default* container specific settings.json values on container create.
 	"settings": {
 		"python.pythonPath": "/usr/local/bin/python",

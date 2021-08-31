@@ -3,6 +3,8 @@ FROM python:3.8.11-slim-buster
 # define build path and set to working directory
 # build path is used to install dependencies in image
 ENV BUILD_PATH /build/
+ENV IS_PROD true
+ENV IS_DEV false
 WORKDIR ${BUILD_PATH}
 
 # install system dependencies
