@@ -26,15 +26,15 @@ function update_line_in_file() {
     fi
 }
 
-if [ "$SCRIPT_ACTION_ARG" = "build-image-dev" ]; then
+if [ "$SCRIPT_ACTION_ARG" = "--build-image-dev" ]; then
     docker build \
     --tag ${DEV_IMAGE_NAME}:latest \
     --file docker/Dockerfile.dev .
-elif [ "$SCRIPT_ACTION_ARG" = "build-image-prod" ]; then
+elif [ "$SCRIPT_ACTION_ARG" = "--build-image-prod" ]; then
     docker build \
     --tag ${PROD_IMAGE_NAME}:latest \
     --file docker/Dockerfile.prod .
-elif [ "$SCRIPT_ACTION_ARG" = "enter-container-dev" ]; then
+elif [ "$SCRIPT_ACTION_ARG" = "--enter-container-dev" ]; then
     docker run \
     -it \
     --entrypoint="" \
@@ -45,7 +45,7 @@ elif [ "$SCRIPT_ACTION_ARG" = "enter-container-dev" ]; then
     --volume ${ABSOLUTE_PATH}:/${APP_NAME} \
     ${DEV_IMAGE_NAME}:latest \
     /bin/bash
-elif [ "$SCRIPT_ACTION_ARG" = "enter-container-prod" ]; then
+elif [ "$SCRIPT_ACTION_ARG" = "--enter-container-prod" ]; then
     docker run -it \
     --entrypoint="" \
     --rm \
@@ -53,7 +53,7 @@ elif [ "$SCRIPT_ACTION_ARG" = "enter-container-prod" ]; then
     --workdir=/app \
     ${PROD_IMAGE_NAME}:latest \
     /bin/bash
-elif [ "$SCRIPT_ACTION_ARG" = "set-app-name" ]; then
+elif [ "$SCRIPT_ACTION_ARG" = "--set-app-name" ]; then
     if [ -z "$APP_NAME_ARG" ]; then
         printf "must pass app name as second arg\n"
         exit 1
