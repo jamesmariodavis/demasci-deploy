@@ -15,16 +15,25 @@ The repository provides tools to build Docker images, attach VSCode to Docker co
 - attach VSCode to development container
 - develop!
 
-The repository provides a set of scripts for Windows powershell (`scripts.ps1`) and bash (`scripts.sh`). These scripts initlaize the repository for a new application and execute various Docker commands. Run the scripts with the `--help` argument for more information.
+The repository provides a set of scripts for Windows Powershell (`scripts.ps1`) and Bash (`scripts.sh`). The scripts are identical in both cases and this Readme assumes Bash. These scripts initlaize the repository for a new application and execute various Docker commands. Run the scripts with the `--help` argument for more information. To invoke the scripts use the following commands.
+
+Bash:
+```
+bash scripts.sh <argument>
+```
+Powershell:
+```
+.\scripts.ps1 <argument>
+```
 
 Throughout the readme we reference variables to be replaced by the user with `<variable>`.
 
 # Set <app_name>
 The skeleton is based around an application (app) name. The current app name is `python_base`. You should change the app name prior to any other operations.
 
-To programatically change the app name and get feedback about the changes made run:
+To programatically change the app name and get feedback about the changes run:
 ```
-bash scripts.sh set-app-name <app_name>
+bash scripts.sh --set-app-name <app_name>
 ```
 
 The base file structure should, in most cases, be related to the app name as well. These changes must be made manually. The directory structure is below:
