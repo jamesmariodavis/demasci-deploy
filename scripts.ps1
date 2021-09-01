@@ -76,22 +76,22 @@ elseif ($SCRIPT_ACTION_ARG -eq "--set-app-name") {
     $RegularExpression="APP_NAME[ ]*=[ ]*`".*`""
     $ReplacementString="APP_NAME=`"${APP_NAME_ARG}`""
     $TargetFile="scripts.ps1"
-    Replace-Line-In-File -RegularExpression $RegularExpression -ReplacementString $ReplacementString -TargetFile $TargetFile
+    Find-And-Replace-Line-In-File -RegularExpression $RegularExpression -ReplacementString $ReplacementString -TargetFile $TargetFile
 
     $RegularExpression="^APP_NAME[ ]*=.*"
     $ReplacementString="APP_NAME=${APP_NAME_ARG}"
     $TargetFile="scripts.sh"
-    Replace-Line-In-File -RegularExpression $RegularExpression -ReplacementString $ReplacementString -TargetFile $TargetFile
+    Find-And-Replace-Line-In-File -RegularExpression $RegularExpression -ReplacementString $ReplacementString -TargetFile $TargetFile
 
     $RegularExpression="^name[ ]*=[ ]*`".*`""
     $ReplacementString="name = `"${APP_NAME_ARG}`""
     $TargetFile="pyproject.toml"
-    Replace-Line-In-File -RegularExpression $RegularExpression -ReplacementString $ReplacementString -TargetFile $TargetFile
+    Find-And-Replace-Line-In-File -RegularExpression $RegularExpression -ReplacementString $ReplacementString -TargetFile $TargetFile
 
     $RegularExpression="`"image`":[ ]*`".*`"[ ]*,"
     $ReplacementString="`"image`": `"${APP_NAME_ARG}_dev:latest`","
     $TargetFile=".devcontainer/devcontainer.json"
-    Replace-Line-In-File -RegularExpression $RegularExpression -ReplacementString $ReplacementString -TargetFile $TargetFile
+    Find-And-Replace-Line-In-File -RegularExpression $RegularExpression -ReplacementString $ReplacementString -TargetFile $TargetFile
 }
 else {
     Write-Output "action ${SCRIPT_ACTION_ARG} not found"
