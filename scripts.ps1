@@ -8,14 +8,14 @@ $ABSOLUTE_PATH=Get-Location
 # set image names relative to app name
 $DEV_IMAGE_NAME="${APP_NAME}_dev"
 $PROD_IMAGE_NAME="${APP_NAME}_prod"
-function Replace-Line-In-File {
+function Find-And-Replace-Line-In-File {
     param (
         [string]$RegularExpression,
         [string]$ReplacementString,
         [string]$TargetFile
     )
-    $Matches=Select-String -Pattern $RegularExpression -Path $TargetFile
-    [int]$MatchCount=$Matches.Count
+    $LineMatches=Select-String -Pattern $RegularExpression -Path $TargetFile
+    [int]$MatchCount=$LineMatches.Count
     $ErrorString='ERROR! Found {0} matches for: {1} file: {2}' -f $MatchCount, $RegularExpression.PadRight(30,' '), $TargetFile
     if ($MatchCount -eq 0) {
         Write-Output $ErrorString
