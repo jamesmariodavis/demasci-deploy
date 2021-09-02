@@ -3,9 +3,6 @@ import os
 import re
 from app_lib.app_paths import ROOT_DIR
 
-# ensure flask app names configured properly
-DOCKERFILE_BASE_FILE_PATH = os.path.join(ROOT_DIR, 'docker', 'Dockerfile.base')
-
 
 class ConsistencyException(Exception):
     pass
@@ -28,6 +25,11 @@ def _get_string_from_file(
     target_string = target_lines[0].group(1)
     return target_string
 
+
+##############################################
+# ensure flask app names configured properly #
+##############################################
+DOCKERFILE_BASE_FILE_PATH = os.path.join(ROOT_DIR, 'docker', 'Dockerfile.base')
 
 # retreive referenced module for flask server
 flask_app_file_location_re = re.compile(r'ENV FLASK_APP_MODULE_LOCATION (.*)')
