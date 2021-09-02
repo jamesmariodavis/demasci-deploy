@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "python_base"
+name = "flask_app"
 version = "0.0.1"
-description = "Base Python Skeleton"
+description = "Flask Application"
 authors = ["James Davis <jamesmariodavis@gmail.com>"]
 
 [tool.poetry.dependencies]

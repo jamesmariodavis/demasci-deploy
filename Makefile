@@ -1,5 +1,16 @@
 ABSOLUTE_PATH=$(abspath .)
 
+#########
+# Tests #
+#########
+.PHONY: test-consistency
+test-consistency:
+	echo 'testing repo consistency ...' &&\
+	python tests/test_repo_consistency.py
+
+.PHONY: test-local
+test-local: test-consistency
+
 #####################
 # Flask Development #
 #####################
@@ -25,4 +36,4 @@ gunicorn-server:
 	--workers ${FLASK_APP_WORKERS} \
 	--threads ${FLASK_APP_THREADS} \
 	--timeout ${FLASK_APP_TIMEOUT} \
-	"${FLASK_APP_FILE_LOCATION}:${FLASK_APP_NAME_IN_CODE}"
+	"${FLASK_APP_MODULE_LOCATION}:${FLASK_APP_NAME_IN_CODE}"

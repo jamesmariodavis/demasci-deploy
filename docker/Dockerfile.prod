@@ -1,5 +1,6 @@
 # syntax=docker/dockerfile:1
-FROM base_image
+ARG BASE_IMAGE_NAME_ARG
+FROM ${BASE_IMAGE_NAME_ARG}
 
 ENV IS_PROD true
 ENV IS_DEV false
@@ -23,4 +24,4 @@ CMD gunicorn \
     --workers ${FLASK_APP_WORKERS} \
     --threads ${FLASK_APP_THREADS} \
     --timeout ${FLASK_APP_TIMEOUT} \
-    "${FLASK_APP_FILE_LOCATION}:${FLASK_APP_NAME_IN_CODE}"
+    "${FLASK_APP_MODULE_LOCATION}:${FLASK_APP_NAME_IN_CODE}"

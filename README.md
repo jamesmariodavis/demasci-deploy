@@ -10,15 +10,14 @@ To use this skeleton effectively you must have the following installed locally:
 
 It is expected that [VSCode](#vscode) is used for development.
 
+Throughout the README we reference variables to be replaced by the user with `<variable>`.
+
 ## Gotchas
-The application name is used to tag Docker images. See [relevant section](#set-application-name) on how to coordinate these files with a script. These tags are coordinated across:
-- `scripts.sh`
-- `.devcontainer/devcontainer.json`
-- `pyproject.toml`
+The repo name is used to tag Docker images. The name of the upstream fetch source in Docker must match the top level directory name locally. This impacts coordinating Docker image names in `scripts.sh` and `.devcontainer/devcontainer.json`.
 
 The flask application file and name (distinct from the application name) is a required reference when starting the webserver. The current file name is `flask_app.py`. This is referenced in `docker/Dockerfile.base` as an environment variable and requires manual coordination.
 
-There is a reference to a flask app in the flash application file (`flask_app.py`). Currently it is `app`. This is referenced in `docker/Dockerfile.base` as an environment variable and required manual configuration.
+There is a reference to a flask app in the flash application file (`flask_app.py`). Currently it is `app`. This is referenced in `docker/Dockerfile.base` as an environment variable and requires manual configuration.
 
 ## Note on Windows (Critical!)
 This is a Linux/Mac centric codebase. However, this can easily be used in Windows. Windows usage requires (in addition to the requirements below) WSL 2.0 and associated Linux distro.
@@ -39,7 +38,6 @@ Similarly for other commands prefixing `wsl` may be required.
 ## `scripts.sh`
 
 The repository provides a set of scripts for Bash in `scripts.sh`. These are intended to be run on the local machine, never in a Docker container. These scripts:
-- initialize the repository for a new application
 - execute Docker build commands
 - execute Docker run commands
 - clean up local system
@@ -48,25 +46,6 @@ Run `scripts.sh` with the `--help` argument for more information. To invoke scri
 ```
 bash scripts.sh <argument>
 ```
-Throughout the readme we reference variables to be replaced by the user with `<variable>`.
-
-## Set Application Name
-The skeleton is based around an application (app) name. The current app name is `python_base`. The app should be changed prior to any other operations as it cascades to Docker image names. Do not name your app `app` or `flask_app`.
-
-To programatically change the app name and get feedback about the changes run:
-```
-bash scripts.sh --set-app-name <app_name>
-```
-
-The base file structure should, in most cases, be related to the app name as well. These changes must be made manually. The directory structure is below:
-```
-<repository_name>
-+-- <python_code_folder>
-+-- README.md
-+-- scripts.sh
-+-- ...
-```
-In most circumstances `<repository_name>` and `<python_code_folder>` should be the same as `<app_name>`. In the current repository each of these is set to `python_base`.
 
 ## VSCode
 Development is expected to be done using VSCode [within a container](https://code.visualstudio.com/docs/remote/containers). The folder `.devcontainer` contains the configuration for using VScode in a container, including all required extensions. This should work out of the box.

@@ -2,7 +2,7 @@
 // https://github.com/microsoft/vscode-dev-containers/tree/v0.187.0/containers/python-3
 // For advanced configuration, see https://code.visualstudio.com/docs/remote/containers-advanced
 {
-	"image": "python_base_dev:latest",
+	"image": "${localWorkspaceFolderBasename}-dev:latest",
 	"containerEnv": {
 		"PYTHONPATH": "/app"
 	},

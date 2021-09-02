@@ -1,64 +1,61 @@
 #!/bin/bash
-# set app name. change this, and only this, to localize to new app
-APP_NAME=python_base
-# get paramaeters passed by user
-SCRIPT_ACTION_ARG=$1
-APP_NAME_ARG=$2
-# retreive absolute path and directory
-ABSOLUTE_PATH=$(pwd)
-CONTAINING_DIR="$(basename ${ABSOLUTE_PATH})"
-# set image names relative to app names
-BASE_IMAGE_NAME=base_image
-DEV_IMAGE_NAME=${APP_NAME}_dev
-PROD_IMAGE_NAME=${APP_NAME}_prod
-# set default port to use for app
-PORT=5000
 
-function find_and_replace_line_in_file() {
-    RegularExpression=$1
-    ReplacementString=$2
-    TargetFile=$3
-    MatchCount=$(grep "${RegularExpression}" ${TargetFile} | wc -l)
-    if [ $MatchCount -eq 0 ]; then
-        printf 'ERROR! Found %i matches for: %-30s file: %s\n' "${MatchCount}" "${RegularExpression}" "${TargetFile}"
-    elif [ $MatchCount -gt 1 ]; then
-        printf 'ERROR! Found %i matches for: %-30s file: %s\n' "${MatchCount}" "${RegularExpression}" "${TargetFile}"
-    else
-        sed -i "" "s/$RegularExpression/$ReplacementString/" $TargetFile
-        printf 'replaced string: %-30s file: %s\n' "${ReplacementString}" "${TargetFile}"
-    fi
-}
+# retreive absolute path and parent directory
+# when running bash in WSL these will not behave as expected
+ABSOLUTE_PATH=$(pwd)
+PARENT_DIR="$(basename ${ABSOLUTE_PATH})"
+
+# retreive repo name from git fetch location
+GIT_FETCH_LOCATION=$(git remote show -n origin | grep Fetch | cut -d: -f2-)
+INFERED_REPO_NAME=$(echo "${GIT_FETCH_LOCATION}" | sed -E "s/.*\/(.*).git/\1/")
+
+# set image names relative to git repo name
+BASE_IMAGE_NAME=${INFERED_REPO_NAME}-base
+DEV_IMAGE_NAME=${INFERED_REPO_NAME}-dev
+PROD_IMAGE_NAME=${INFERED_REPO_NAME}-prod
+
+# setup flask app
+# other setup is located in Dockerfiles
+FLASK_APP_PORT=5000
+
 
 function build_image_base() {
     docker build \
     --tag ${BASE_IMAGE_NAME}:latest \
+    --build-arg FLASK_APP_PORT_ARG=${FLASK_APP_PORT} \
     --file docker/Dockerfile.base .
 }
 function build_image_dev() {
     docker build \
     --tag ${DEV_IMAGE_NAME}:latest \
+    --build-arg BASE_IMAGE_NAME_ARG=${BASE_IMAGE_NAME}:latest \
     --file docker/Dockerfile.dev .
 }
 
 function build_image_prod() {
     docker build \
     --tag ${PROD_IMAGE_NAME}:latest \
+    --build-arg BASE_IMAGE_NAME_ARG=${BASE_IMAGE_NAME}:latest \
     --file docker/Dockerfile.prod .
 }
 
-if [ "$SCRIPT_ACTION_ARG" = "--build-image-dev" ]; then
-    build_image_base && \
-    build_image_dev
-elif [ "$SCRIPT_ACTION_ARG" = "--build-image-prod" ]; then
-    build_image_base && \
-    build_image_prod
-elif [ "$SCRIPT_ACTION_ARG" = "--build-image" ]; then
+if [ "$1" = "--help" ]; then
+    PadSpace=20
+    printf "available commands:\n"
+    printf "%-${PadSpace}s builds all Docker images required for development and production\n" "--build"
+    printf "%-${PadSpace}s deletes unused containers and images. use -a to delete all\n" "--clean-docker"
+    printf "%-${PadSpace}s enters development container and starts interactive bash shell\n" "--enter-dev"
+    printf "%-${PadSpace}s enters production container and starts interactive bash shell\n" "--enter-prod"
+    printf "%-${PadSpace}s starts production container to simulate deployment\n" "--run-prod"
+elif [ "$1" = "--build" ]; then
+    # build all images in order
     build_image_base && \
     build_image_prod && \
-    build_image_dev
-elif [ "$SCRIPT_ACTION_ARG" = "--clean-docker" ]; then
-    docker system prune
-elif [ "$SCRIPT_ACTION_ARG" = "--enter-container-dev" ]; then
+    build_image_dev && \
+    docker image prune --force
+elif [ "$1" = "--clean-docker" ]; then
+    docker system prune $2
+elif [ "$1" = "--enter-dev" ]; then
     docker run \
     -it \
     --rm \
@@ -66,41 +63,28 @@ elif [ "$SCRIPT_ACTION_ARG" = "--enter-container-dev" ]; then
     --workdir=/app \
     --env PYTHONPATH=/app \
     --volume ${ABSOLUTE_PATH}:/app \
-    --publish ${PORT}:${PORT} \
+    --publish ${FLASK_APP_PORT}:${FLASK_APP_PORT} \
+    --name="${DEV_IMAGE_NAME}-bash" \
     ${DEV_IMAGE_NAME}:latest \
     /bin/bash
-elif [ "$SCRIPT_ACTION_ARG" = "--enter-container-prod" ]; then
+elif [ "$1" = "--enter-prod" ]; then
+    # similar to entering dev container
+    # does not mount top directory of repo
+    # using copied version of repo (from build) located in /app in container
     docker run \
     -it \
     --rm \
     --entrypoint="" \
     --workdir=/app \
-    --publish ${PORT}:${PORT} \
+    --publish ${FLASK_APP_PORT}:${FLASK_APP_PORT} \
+    --name="${PROD_IMAGE_NAME}-bash" \
     ${PROD_IMAGE_NAME}:latest \
     /bin/bash
-elif [ "$SCRIPT_ACTION_ARG" = "--run-prod" ]; then
+elif [ "$1" = "--run-prod" ]; then
+    # mimics what happens on deploy
     docker run \
-    --publish ${PORT}:${PORT} \
+    --publish ${FLASK_APP_PORT}:${FLASK_APP_PORT} \
     ${PROD_IMAGE_NAME}:latest
-elif [ "$SCRIPT_ACTION_ARG" = "--set-app-name" ]; then
-    if [ -z "$APP_NAME_ARG" ]; then
-        printf "must pass app name as second arg\n"
-        exit 1
-    fi
-    RegularExpression="^APP_NAME[ ]*=.*"
-    ReplacementString="APP_NAME=${APP_NAME_ARG}"
-    TargetFile="scripts.sh"
-    find_and_replace_line_in_file "$RegularExpression" "$ReplacementString" "$TargetFile"
-
-    RegularExpression="^name[ ]*=[ ]*\".*\""
-    ReplacementString="name = \"${APP_NAME_ARG}\""
-    TargetFile="pyproject.toml"
-    find_and_replace_line_in_file "$RegularExpression" "$ReplacementString" "$TargetFile"
-
-    RegularExpression="\"image\":[ ]*\".*\"[ ]*,"
-    ReplacementString="\"image\": \"${APP_NAME_ARG}_dev:latest\","
-    TargetFile=".devcontainer/devcontainer.json"
-    find_and_replace_line_in_file "$RegularExpression" "$ReplacementString" "$TargetFile"
 else
-    printf "action ${SCRIPT_ACTION_ARG} not found\n"
+    printf "action ${1} not found\n"
 fi
