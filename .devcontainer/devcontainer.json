@@ -2,7 +2,6 @@
 // https://github.com/microsoft/vscode-dev-containers/tree/v0.187.0/containers/python-3
 // For advanced configuration, see https://code.visualstudio.com/docs/remote/containers-advanced
 {
-	"name": "${localWorkspaceFolderBasename}_vscode",
 	"image": "python_base_dev:latest",
 	"containerEnv": {
 		"PYTHONPATH": "/app"
@@ -34,5 +33,7 @@
 	// Use 'postCreateCommand' to run commands after the container is created.
 	// "postCreateCommand": "pip3 install --user -r requirements.txt",
 	// Use 'runArgs' to customize docker run command.
-	// "runArgs": []
+	"runArgs": [
+		"--name=VSCode-${localWorkspaceFolderBasename}"
+	]
 }
