@@ -1,0 +1,58 @@
+# syntax=docker/dockerfile:1
+FROM python:3.8.11-slim-buster
+
+# define build path and set to working directory
+# build path is used to install dependencies in image
+ENV BUILD_PATH /build/
+WORKDIR ${BUILD_PATH}
+
+# install system dependencies
+RUN apt-get update && \
+    apt-get install --no-install-recommends -y \
+    gcc \
+    python3-psutil \
+    libpq-dev \
+    curl \
+    build-essential && \
+    rm -rf /var/lib/apt/lists/*
+
+# update pip to speed up poetry
+RUN pip install --upgrade pip
+
+# poetry stuff
+ENV PYTHONUNBUFFERED=1 \
+    POETRY_VERSION=1.1.6 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=off \
+    PIP_DISABLE_PIP_VERSION_CHECK=on \
+    PIP_DEFAULT_TIMEOUT=100 \
+    POETRY_HOME="/opt/poetry" \
+    POETRY_VIRTUALENVS_IN_PROJECT=false \
+    POETRY_VIRTUALENVS_CREATE=false \
+    POETRY_NO_INTERACTION=1
+
+ENV PATH="${PATH}:/root/.local/bin"
+
+# Install Poetry and update path - respects $POETRY_VERSION & $POETRY_HOME
+RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
+ENV PATH="${PATH}:${POETRY_HOME}/bin"
+
+# configure gunicorn server. used to configure gunicorn commands
+# set APP_LOCATION to main entrypoint for flask app
+ENV FLASK_APP_FILE_LOCATION flask_app
+# set APP_METHOD_NAME to name of application defined in python
+ENV FLASK_APP_NAME_IN_CODE app
+# use default flask port 5000
+ENV FLASK_APP_PORT 5000
+# set workers to number of cpu cores
+ENV FLASK_APP_WORKERS 1
+ENV FLASK_APP_THREADS 8
+# timeout is set to 0 to disable the timeouts of the workers to allow Google Cloud Run to handle instance scaling
+ENV FLASK_APP_TIMEOUT 0
+
+# allow statements and log messages to immediately appear in the Knative logs in server
+ENV PYTHONUNBUFFERED True
+
+# copy files for poetry install
+COPY pyproject.toml ${BUILD_PATH}/pyproject.toml
+COPY poetry.lock ${BUILD_PATH}/poetry.lock

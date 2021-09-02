@@ -1,24 +1,28 @@
-IMAGE_NAME=python_base
 ABSOLUTE_PATH=$(abspath .)
 
-######################
-# Docker Development #
-######################
-.PHONY: build-image
-build:
-	docker build \
-		--tag $(IMAGE_NAME):latest  \
-		--file docker/Dockerfile .
+#####################
+# Flask Development #
+#####################
 
-.PHONY: enter-container
-docker-ssh:
-	docker run -it \
-       --entrypoint="" \
-       --rm \
-       --net=host \
-       --workdir=/python_base \
-	--env PYTHONPATH=/python_base \
-	--volume $(ABSOLUTE_PATH):/python_base \
-       --env-file docker/env_file \
-       $(IMAGE_NAME):latest \
-       /bin/bash
+# references env variables defined in Dockerfile
+.PHONY: flask-server-dev
+flask-server-dev:
+	export FLASK_APP=${FLASK_APP_FILE_LOCATION} &&\
+	export FLASK_ENV=development &&\
+	flask run --host=0.0.0.0
+
+# references env variables defined in Dockerfile
+.PHONY: flask-server
+flask-server:
+	export FLASK_APP=${FLASK_APP_FILE_LOCATION} &&\
+	flask run --host=0.0.0.0
+
+# references env variables defined in Dockerfile
+.PHONY: gunicorn-server
+gunicorn-server:
+	gunicorn \
+	--bind ":${FLASK_APP_PORT}" \
+	--workers ${FLASK_APP_WORKERS} \
+	--threads ${FLASK_APP_THREADS} \
+	--timeout ${FLASK_APP_TIMEOUT} \
+	"${FLASK_APP_FILE_LOCATION}:${FLASK_APP_NAME_IN_CODE}"

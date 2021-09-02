@@ -18,13 +18,16 @@
 		"python.linting.pylintPath": "pylint",
 		"editor.formatOnSave": true,
 		"python.formatting.provider": "yapf",
+		"[makefile]": {
+			"editor.insertSpaces": false,
+			"editor.detectIndentation": false,
+		}
 	},
 	// Add the IDs of extensions you want installed when the container is created.
 	"extensions": [
 		"ms-python.python",
 		"ms-python.vscode-pylance",
 		"ms-azuretools.vscode-docker",
-		"ms-vscode.powershell"
 	],
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
