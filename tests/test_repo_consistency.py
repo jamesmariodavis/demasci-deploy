@@ -29,18 +29,18 @@ def _get_string_from_file(
 ##############################################
 # ensure flask app names configured properly #
 ##############################################
-DOCKERFILE_BASE_FILE_PATH = os.path.join(ROOT_DIR, 'docker', 'Dockerfile.base')
+SCRIPTS_FILE_PATH = os.path.join(ROOT_DIR, 'scripts.sh')
 
 # retreive referenced module for flask server
-flask_app_file_location_re = re.compile(r'ENV FLASK_APP_MODULE_LOCATION (.*)')
+flask_app_file_location_re = re.compile(r'^FLASK_APP_MODULE_LOCATION[]*=[]*(.*)')
 try:
     referenced_module_location = _get_string_from_file(
         match_object=flask_app_file_location_re,
-        file_path=DOCKERFILE_BASE_FILE_PATH,
+        file_path=SCRIPTS_FILE_PATH,
     )
 except ConsistencyException:
     err_str = '{} does not have proper flask app configuration. expected unique match for {}'.format(
-        DOCKERFILE_BASE_FILE_PATH,
+        SCRIPTS_FILE_PATH,
         flask_app_file_location_re.pattern,
     )
     raise ConsistencyException(err_str)
@@ -50,21 +50,21 @@ infered_python_file_path = os.path.join(ROOT_DIR, infered_python_file)
 # check if referenced module exists
 if not os.path.exists(infered_python_file_path):
     err_str = '{} references flask module {}. does not exist'.format(
-        DOCKERFILE_BASE_FILE_PATH,
+        SCRIPTS_FILE_PATH,
         infered_python_file,
     )
     raise ConsistencyException(err_str)
 
 # retreive referenced flask app name
-docker_flask_app_name_re = re.compile(r'ENV FLASK_APP_NAME_IN_CODE (.*)')
+docker_flask_app_name_re = re.compile(r'^FLASK_APP_NAME_IN_CODE[ ]*=[ ]*(.*)')
 try:
     referenced_flask_app_name = _get_string_from_file(
         match_object=docker_flask_app_name_re,
-        file_path=DOCKERFILE_BASE_FILE_PATH,
+        file_path=SCRIPTS_FILE_PATH,
     )
 except ConsistencyException:
     err_str = '{} does not have proper flask app configuration. expected unique match for {}'.format(
-        DOCKERFILE_BASE_FILE_PATH,
+        SCRIPTS_FILE_PATH,
         docker_flask_app_name_re.pattern,
     )
     raise ConsistencyException(err_str)

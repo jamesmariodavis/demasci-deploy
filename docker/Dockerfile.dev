@@ -5,13 +5,29 @@ FROM ${BASE_IMAGE_NAME_ARG}
 ENV IS_PROD false
 ENV IS_DEV true
 
+# capture flask app args passed from build script
+# see scripts.sh for passed values
+ARG FLASK_APP_MODULE_LOCATION_ARG
+ARG FLASK_APP_NAME_IN_CODE_ARG
+ARG FLASK_APP_PORT_ARG
+ARG FLASK_APP_WORKERS_ARG
+ARG FLASK_APP_THREADS_ARG
+ARG FLASK_APP_TIMEOUT_ARG
+
+# inject passed arguments as permanent environment variables
+ENV FLASK_APP_MODULE_LOCATION ${FLASK_APP_MODULE_LOCATION_ARG}
+ENV FLASK_APP_NAME_IN_CODE ${FLASK_APP_NAME_IN_CODE_ARG}
+ENV FLASK_APP_PORT ${FLASK_APP_PORT_ARG}
+ENV FLASK_APP_WORKERS ${FLASK_APP_WORKERS_ARG}
+ENV FLASK_APP_THREADS ${FLASK_APP_THREADS_ARG}
+ENV FLASK_APP_TIMEOUT ${FLASK_APP_TIMEOUT_ARG}
+
 # install additional dependencies
-RUN apt-get update && \
-    apt-get install --no-install-recommends -y \
+RUN apk update && \
+    apk add \
     make \
     unzip \
-    git && \
-    rm -rf /var/lib/apt/lists/*
+    git
 
 # install python and packages
 RUN poetry install

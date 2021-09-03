@@ -1,22 +1,49 @@
 # syntax=docker/dockerfile:1
+# complete installation from base image
 ARG BASE_IMAGE_NAME_ARG
-FROM ${BASE_IMAGE_NAME_ARG}
-
-ENV IS_PROD true
-ENV IS_DEV false
+FROM ${BASE_IMAGE_NAME_ARG} as prod-builder-base
 
 # install python and packages
 RUN poetry install --no-dev
 
-# clean up build
-WORKDIR /
-RUN rm -rf ${BUILD_PATH}
+#######################################################
+# rebuild production image without build dependencies #
+#######################################################
+FROM python:3.8-alpine
+
+# copy built python files from previous image
+COPY --from=prod-builder-base /usr/local/bin /usr/local/bin
+COPY --from=prod-builder-base /usr/local/lib/python3.8 /usr/local/lib/python3.8
+
+ENV IS_PROD true
+ENV IS_DEV false
+
+# install minimal dependencies for convenience
+RUN apk add \
+    make
 
 # copy code and set work directory
 ENV APP_HOME /app/
 WORKDIR ${APP_HOME}
 ENV PYTHONPATH=${APP_HOME}
 COPY . /${APP_HOME}/
+
+# capture flask app args passed from build script
+# see scripts.sh for passed values
+ARG FLASK_APP_MODULE_LOCATION_ARG
+ARG FLASK_APP_NAME_IN_CODE_ARG
+ARG FLASK_APP_PORT_ARG
+ARG FLASK_APP_WORKERS_ARG
+ARG FLASK_APP_THREADS_ARG
+ARG FLASK_APP_TIMEOUT_ARG
+
+# inject passed arguments as permanent environment variables
+ENV FLASK_APP_MODULE_LOCATION ${FLASK_APP_MODULE_LOCATION_ARG}
+ENV FLASK_APP_NAME_IN_CODE ${FLASK_APP_NAME_IN_CODE_ARG}
+ENV FLASK_APP_PORT ${FLASK_APP_PORT_ARG}
+ENV FLASK_APP_WORKERS ${FLASK_APP_WORKERS_ARG}
+ENV FLASK_APP_THREADS ${FLASK_APP_THREADS_ARG}
+ENV FLASK_APP_TIMEOUT ${FLASK_APP_TIMEOUT_ARG}
 
 # set command when invoking docker run
 CMD gunicorn \

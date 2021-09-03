@@ -15,27 +15,44 @@ DEV_IMAGE_NAME=${INFERED_REPO_NAME}-dev
 PROD_IMAGE_NAME=${INFERED_REPO_NAME}-prod
 
 # setup flask app
-# other setup is located in Dockerfiles
+# configure gunicorn server. used to configure gunicorn commands
+# set APP_LOCATION to main entrypoint for flask app
+FLASK_APP_MODULE_LOCATION=flask_app
+# set APP_METHOD_NAME to name of application defined in python
+FLASK_APP_NAME_IN_CODE=app
+# use default flask port 5000
 FLASK_APP_PORT=5000
+# set workers to number of cpu cores
+FLASK_APP_WORKERS=1
+FLASK_APP_THREADS=8
+# timeout is set to 0 to disable the timeouts of the workers to allow Google Cloud Run to handle instance scaling
+FLASK_APP_TIMEOUT=0
+
+# all builds use the same args
+DOCKER_BUILD_WITH_ARGS="docker build \
+    --build-arg FLASK_APP_MODULE_LOCATION_ARG=${FLASK_APP_MODULE_LOCATION} \
+    --build-arg FLASK_APP_NAME_IN_CODE_ARG=${FLASK_APP_NAME_IN_CODE} \
+    --build-arg FLASK_APP_PORT_ARG=${FLASK_APP_PORT} \
+    --build-arg FLASK_APP_WORKERS_ARG=${FLASK_APP_WORKERS} \
+    --build-arg FLASK_APP_THREADS_ARG=${FLASK_APP_THREADS} \
+    --build-arg FLASK_APP_TIMEOUT_ARG=${FLASK_APP_TIMEOUT} \
+    --build-arg BASE_IMAGE_NAME_ARG=${BASE_IMAGE_NAME}:latest"
 
 
 function build_image_base() {
     docker build \
     --tag ${BASE_IMAGE_NAME}:latest \
-    --build-arg FLASK_APP_PORT_ARG=${FLASK_APP_PORT} \
     --file docker/Dockerfile.base .
 }
 function build_image_dev() {
-    docker build \
+    ${DOCKER_BUILD_WITH_ARGS} \
     --tag ${DEV_IMAGE_NAME}:latest \
-    --build-arg BASE_IMAGE_NAME_ARG=${BASE_IMAGE_NAME}:latest \
     --file docker/Dockerfile.dev .
 }
 
 function build_image_prod() {
-    docker build \
+    ${DOCKER_BUILD_WITH_ARGS} \
     --tag ${PROD_IMAGE_NAME}:latest \
-    --build-arg BASE_IMAGE_NAME_ARG=${BASE_IMAGE_NAME}:latest \
     --file docker/Dockerfile.prod .
 }
 
@@ -66,7 +83,7 @@ elif [ "$1" = "--enter-dev" ]; then
     --publish ${FLASK_APP_PORT}:${FLASK_APP_PORT} \
     --name="${DEV_IMAGE_NAME}-bash" \
     ${DEV_IMAGE_NAME}:latest \
-    /bin/bash
+    /bin/sh
 elif [ "$1" = "--enter-prod" ]; then
     # similar to entering dev container
     # does not mount top directory of repo
@@ -79,12 +96,12 @@ elif [ "$1" = "--enter-prod" ]; then
     --publish ${FLASK_APP_PORT}:${FLASK_APP_PORT} \
     --name="${PROD_IMAGE_NAME}-bash" \
     ${PROD_IMAGE_NAME}:latest \
-    /bin/bash
+    /bin/sh
 elif [ "$1" = "--run-prod" ]; then
     # mimics what happens on deploy
     docker run \
     --publish ${FLASK_APP_PORT}:${FLASK_APP_PORT} \
     ${PROD_IMAGE_NAME}:latest
 else
-    printf "action ${1} not found\n"
+printf "action ${1} not found\n"
 fi
