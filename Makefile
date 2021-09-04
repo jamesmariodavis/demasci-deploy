@@ -8,8 +8,20 @@ test-consistency:
 	echo 'testing repo consistency ...' &&\
 	python tests/test_repo_consistency.py
 
+.PHONY: test-mypy
+test-mypy:
+	echo 'running mypy ...' &&\
+	mypy .
+
+.PHONY: test-pytest-local
+test-pytest-local:
+	echo 'running pytest (local tests only) ...' &&\
+	pytest \
+	--cov=app_lib \
+	--cov-fail-under = 50
+
 .PHONY: test-local
-test-local: test-consistency
+test-local: test-consistency test-mypy
 
 #####################
 # Flask Development #

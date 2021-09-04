@@ -4,3 +4,4 @@ README.md
 .git
 .DS_Store
 .devcontainer
+.mypy_cache

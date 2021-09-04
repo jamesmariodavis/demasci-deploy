@@ -14,7 +14,9 @@ BASE_IMAGE_NAME=${INFERED_REPO_NAME}-base
 DEV_IMAGE_NAME=${INFERED_REPO_NAME}-dev
 PROD_IMAGE_NAME=${INFERED_REPO_NAME}-prod
 
-# setup flask app
+###################
+# setup flask app #
+###################
 # configure gunicorn server. used to configure gunicorn commands
 # set APP_LOCATION to main entrypoint for flask app
 FLASK_APP_MODULE_LOCATION=flask_app
@@ -27,6 +29,12 @@ FLASK_APP_WORKERS=1
 FLASK_APP_THREADS=8
 # timeout is set to 0 to disable the timeouts of the workers to allow Google Cloud Run to handle instance scaling
 FLASK_APP_TIMEOUT=0
+
+##########################
+# choose coin-or solvers #
+##########################
+# use y or n for each variable
+INCLUDE_CBC=y
 
 # all builds use the same args
 DOCKER_BUILD_WITH_ARGS="docker build \
@@ -42,6 +50,7 @@ DOCKER_BUILD_WITH_ARGS="docker build \
 function build_image_base() {
     docker build \
     --tag ${BASE_IMAGE_NAME}:latest \
+    --build-arg INCLUDE_CBC=${INCLUDE_CBC} \
     --file docker/Dockerfile.base .
 }
 function build_image_dev() {
@@ -83,7 +92,7 @@ elif [ "$1" = "--enter-dev" ]; then
     --publish ${FLASK_APP_PORT}:${FLASK_APP_PORT} \
     --name="${DEV_IMAGE_NAME}-bash" \
     ${DEV_IMAGE_NAME}:latest \
-    /bin/sh
+    /bin/bash
 elif [ "$1" = "--enter-prod" ]; then
     # similar to entering dev container
     # does not mount top directory of repo
@@ -96,7 +105,7 @@ elif [ "$1" = "--enter-prod" ]; then
     --publish ${FLASK_APP_PORT}:${FLASK_APP_PORT} \
     --name="${PROD_IMAGE_NAME}-bash" \
     ${PROD_IMAGE_NAME}:latest \
-    /bin/sh
+    /bin/bash
 elif [ "$1" = "--run-prod" ]; then
     # mimics what happens on deploy
     docker run \

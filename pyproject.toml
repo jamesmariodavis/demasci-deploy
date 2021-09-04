@@ -12,3 +12,5 @@ gunicorn = "^20.1.0"
 [tool.poetry.dev-dependencies]
 yapf = "^0.31.0"
 pylint = "^2.10.2"
+mypy = "^0.910"
+pytest = "^6.2.5"

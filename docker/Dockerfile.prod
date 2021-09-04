@@ -1,10 +1,7 @@
 # syntax=docker/dockerfile:1
-# complete installation from base image
+# build reference to base image to use in COPY command
 ARG BASE_IMAGE_NAME_ARG
 FROM ${BASE_IMAGE_NAME_ARG} as prod-builder-base
-
-# install python and packages
-RUN poetry install --no-dev
 
 #######################################################
 # rebuild production image without build dependencies #
@@ -14,13 +11,20 @@ FROM python:3.8-alpine
 # copy built python files from previous image
 COPY --from=prod-builder-base /usr/local/bin /usr/local/bin
 COPY --from=prod-builder-base /usr/local/lib/python3.8 /usr/local/lib/python3.8
+COPY --from=prod-builder-base /coin-or /coin-or
 
 ENV IS_PROD true
 ENV IS_DEV false
 
+# set paths for coin-or binaries
+ENV LD_LIBRARY_PATH /coin-or/lib
+ENV PATH="${PATH}:/coin-or/bin"
+ENV PATH="${PATH}:/coin-or/lib"
+
 # install minimal dependencies for convenience
 RUN apk add \
-    make
+    make \
+    bash
 
 # copy code and set work directory
 ENV APP_HOME /app/

@@ -9,7 +9,7 @@ class ConsistencyException(Exception):
 
 
 def _get_string_from_file(
-    match_object: re.Pattern,
+    match_object: re.Pattern,  # type: ignore
     file_path: str,
 ) -> str:
     with open(file_path, 'r') as f:
@@ -22,7 +22,18 @@ def _get_string_from_file(
             file_path,
         )
         raise ConsistencyException(err_str)
-    target_string = target_lines[0].group(1)
+    unique_match_object = target_lines[0]
+    if unique_match_object is None:
+        err_str = 'expected match object for {} is None'.format(match_object)
+        raise ConsistencyException(err_str)
+    try:
+        target_string = unique_match_object.group(1)
+    except IndexError:
+        err_str = 'extracting group(1) failed on {} using regex {}'.format(
+            unique_match_object,
+            match_object,
+        )
+        raise ConsistencyException(err_str)
     return target_string
 
 

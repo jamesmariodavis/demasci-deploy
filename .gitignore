@@ -1,2 +1,4 @@
 /docker/.aws/credentials
 /docker/env_file
+
+.mypy_cache

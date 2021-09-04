@@ -22,13 +22,6 @@ ENV FLASK_APP_WORKERS ${FLASK_APP_WORKERS_ARG}
 ENV FLASK_APP_THREADS ${FLASK_APP_THREADS_ARG}
 ENV FLASK_APP_TIMEOUT ${FLASK_APP_TIMEOUT_ARG}
 
-# install additional dependencies
-RUN apk update && \
-    apk add \
-    make \
-    unzip \
-    git
-
 # install python and packages
 RUN poetry install
 

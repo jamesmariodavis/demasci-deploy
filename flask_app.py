@@ -6,17 +6,17 @@ app = Flask(__name__)
 
 
 @app.route("/")
-def index():
+def index() -> str:
     return "Index"
 
 
 @app.route('/hello')
-def hello():
+def hello() -> str:
     return 'Hello, World'
 
 
 @app.route('/user/<string:username>')
-def show_user_profile(username: str):
+def show_user_profile(username: str) -> str:
     return 'User {}'.format(escape(username))
 
 

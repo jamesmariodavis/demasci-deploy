@@ -9,9 +9,29 @@ WORKDIR ${BUILD_PATH}
 # install system dependencies
 RUN apk update && \
     apk add \
+    pkgconfig \
     gcc \
+    g++ \
+    gfortran \
+    blas \
+    lapack \
+    patch \
+    bash \
+    make \
+    git \
     curl && \
     pip install --upgrade pip
+
+# build coin-or binaries
+ARG INCLUDE_CBC
+COPY build_coin-or.sh ${BUILD_PATH}/build_coin-or.sh
+RUN chmod u+x build_coin-or.sh &&\
+    ./build_coin-or.sh ${INCLUDE_CBC}
+
+# set paths for coin-or binaries
+ENV LD_LIBRARY_PATH /coin-or/lib
+ENV PATH="${PATH}:/coin-or/bin"
+ENV PATH="${PATH}:/coin-or/lib"
 
 # poetry stuff
 ENV PYTHONUNBUFFERED=1 \
@@ -37,3 +57,6 @@ ENV PYTHONUNBUFFERED True
 # copy files for poetry install
 COPY pyproject.toml ${BUILD_PATH}/pyproject.toml
 COPY poetry.lock ${BUILD_PATH}/poetry.lock
+
+# install python and production packages
+RUN poetry install --no-dev
