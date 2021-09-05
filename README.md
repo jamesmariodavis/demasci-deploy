@@ -1,9 +1,23 @@
-# Quick Start
+# Overview and Quickstart
+This repository is designed to be a skeleton for a DS centric python project. It is functional across platforms (Mac, Windows, Linux). It uses various technologies to:
+- manage Docker images/containers for development and production
+- create a containerized webserver on Google Cloud Run
+- interface with Google Sheets (used as a UI for an application)
+
+To use this skeleton effectively you must have the following installed locally:
+- [Docker Desktop](https://www.docker.com/get-started)
+- [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) (use `git --version` to check if pre-installed)
+
+It is expected that [VSCode](#vscode) is used for development.
+
+Throughout the README we reference variables to be replaced by the user with `<variable>`.
+
+## Quick Start
 All commands in `scripts.sh` are intended to be run on local machine.
 All commands in `Makefile` are intended to be run in development container.
 Set configuration in `configure.sh`. URLs may not be known until after first deploy.
 
-Build all containers on local system:
+Build all containers on local system (this can take ~20m on first run):
 ```
 bash scripts.sh --build
 ```
@@ -27,20 +41,7 @@ To verify URL is functional enter container and run:
 make gcloud-curl
 ```
 
-# Overview and Preliminaries
-This repository is designed to be a skeleton for a DS centric python project. It is functional across platforms (Mac, Windows, Linux). It uses various technologies to:
-- manage Docker images/containers for development and production
-- create a containerized webserver on Google Cloud Run
-- interface with Google Sheets (used as a UI for an application)
-
-To use this skeleton effectively you must have the following installed locally:
-- [Docker Desktop](https://www.docker.com/get-started)
-- [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) (use `git --version` to check if pre-installed)
-
-It is expected that [VSCode](#vscode) is used for development.
-
-Throughout the README we reference variables to be replaced by the user with `<variable>`.
-
+# Preliminaries
 ## Gotchas
 The repo name is used to tag Docker images.
 The name of the upstream fetch source in Docker must match the top level directory name locally.
@@ -100,19 +101,22 @@ VScode must be installed on the local machine with some dependencies:
 - [VSCode](https://code.visualstudio.com/download)
 - [Remote - Containers (VSCode Extension)](https://code.visualstudio.com/docs/remote/containers)
 
-# Setup GCP
-To use Google Cloud we interact the web UI, Google Cloud Console, rather than depend on scripting. You will need to:
+# Google Cloud Platform
+To use Google Cloud Platform (GCP) we interact the web UI, Google Cloud Console, rather than depend on scripting.
+To leverage GCP you will need to:
 - [Create a Google Cloud account](https://cloud.google.com/)
 - [Create a project](https://cloud.google.com/resource-manager/docs/creating-managing-projects)
 - [Enable billing](https://cloud.google.com/billing/docs/how-to/modify-project). Navigate to Billing in Google Cloud Console.
 - [Enable Google Run API](https://support.google.com/googleapi/answer/6158841?hl=en). This is non-essential: the first deployment will prompt for enabling required APIs.
 - [Enable Container Registry service](https://cloud.google.com/container-registry/docs/enable-service). Navigate to Container Registry in Google Cloud Console.
 
-There are many avaiable services. This repo depends on a small number of them. It is useful to pin these services in Google Cloud Console:
+There are many avaiable services.
+This repo depends on a small number of them.
+It is useful to pin these services in Google Cloud Console:
 - Cloud RUN
 - Container Registry
 - IAM & Admin
 
-Once complete add key information, especially project ID, to `configure.sh`.
+Once complete add key information, especially project ID, to `configure.sh`. URL information may not be available until after first deployment.
 
-For common issues with Cloud Run see [here](https://cloud.google.com/run/docs/troubleshooting). It will be especially important to manage permissions related to the Cloud Run Invoker role when calling the service in Cloud Run.
+For common issues with Cloud Run see [here](https://cloud.google.com/run/docs/troubleshooting). It will be especially important to manage permissions related to the Cloud Run Invoker role.
