@@ -102,6 +102,7 @@ elif [ "$1" = "--enter-prod" ]; then
 elif [ "$1" = "--run" ]; then
     # mimics what happens on deploy
     docker run \
+    --rm \
     --env PORT=${FLASK_APP_PORT} \
     --publish ${FLASK_APP_PORT}:${FLASK_APP_PORT} \
     ${PROD_IMAGE_NAME}:latest

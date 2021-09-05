@@ -1,4 +1,5 @@
 ABSOLUTE_PATH=$(abspath .)
+GCLOUD_IDENTITY_TOKEN=$(shell gcloud auth print-identity-token)
 
 #########
 # Tests #
@@ -63,3 +64,9 @@ gcloud-deploy:
 	docker tag ${PROD_IMAGE_NAME} gcr.io/${GCLOUD_PROJECT_ID}/${PROD_IMAGE_NAME} &&\
     docker push gcr.io/${GCLOUD_PROJECT_ID}/${PROD_IMAGE_NAME} &&\
 	gcloud run deploy ${GCLOUD_SERVICE_NAME} ${GCLOUD_ALLOW_UNAUTHENTICATED_PARAM} --image=gcr.io/${GCLOUD_PROJECT_ID}/${PROD_IMAGE_NAME}
+
+.PHONY: gcloud-curl
+gcloud-curl:
+	printf '\n' &&\
+	curl --header "Authorization: Bearer ${GCLOUD_IDENTITY_TOKEN}" ${GCLOUD_APP_URL} &&\
+	printf '\n\n'
