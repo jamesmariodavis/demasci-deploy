@@ -2,3 +2,5 @@
 /docker/env_file
 
 .mypy_cache
+.pytest_cache
+.coverage

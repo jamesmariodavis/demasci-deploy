@@ -18,7 +18,7 @@ test-pytest-local:
 	echo 'running pytest (local tests only) ...' &&\
 	pytest \
 	--cov=app_lib \
-	--cov-fail-under = 50
+	--cov-fail-under 50
 
 .PHONY: test-local
 test-local: test-consistency test-mypy
@@ -49,3 +49,17 @@ gunicorn-server:
 	--threads ${FLASK_APP_THREADS} \
 	--timeout ${FLASK_APP_TIMEOUT} \
 	"${FLASK_APP_MODULE_LOCATION}:${FLASK_APP_NAME_IN_CODE}"
+
+##############
+# Deployment #
+##############
+
+.PHONY: gcloud-auth
+gcloud-auth:
+	gcloud auth login
+
+.PHONY: gcloud-deploy
+gcloud-deploy:
+	docker tag ${PROD_IMAGE_NAME} gcr.io/${GCLOUD_PROJECT_ID}/${PROD_IMAGE_NAME} &&\
+    docker push gcr.io/${GCLOUD_PROJECT_ID}/${PROD_IMAGE_NAME} &&\
+	gcloud run deploy ${GCLOUD_SERVICE_NAME} ${GCLOUD_ALLOW_UNAUTHENTICATED_PARAM} --image=gcr.io/${GCLOUD_PROJECT_ID}/${PROD_IMAGE_NAME}

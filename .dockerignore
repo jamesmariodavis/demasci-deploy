@@ -5,3 +5,5 @@ README.md
 .DS_Store
 .devcontainer
 .mypy_cache
+.pytest_cache
+.coverage

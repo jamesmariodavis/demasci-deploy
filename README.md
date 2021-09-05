@@ -6,6 +6,7 @@ This repository is designed to be a skeleton for a DS centric python project. It
 
 To use this skeleton effectively you must have the following installed locally:
 - [Docker Desktop](https://www.docker.com/get-started)
+- [Google Cloud SDK](https://cloud.google.com/sdk/docs/install)
 - [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) (use `git --version` to check if pre-installed)
 
 It is expected that [VSCode](#vscode) is used for development.
@@ -19,12 +20,12 @@ The flask application file and name (distinct from the application name) is a re
 
 There is a reference to a flask app in the flash application file (`flask_app.py`). Currently it is `app`. This is referenced in `docker/Dockerfile.base` as an environment variable and requires manual configuration.
 
-## Note on Windows (Critical!)
+## Note on Windows
 This is a Linux/Mac centric codebase. However, this can easily be used in Windows. Windows usage requires (in addition to the requirements below) WSL 2.0 and associated Linux distro.
 - [WSL](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
 - [latest Ubuntu LTS Release for WSL](https://www.microsoft.com/en-us/p/ubuntu-2004-lts/9n6svws3rx71) Search Windows Marketplace for updated version.
 
-Windows users should use Powershell as their main entry point for commands.
+Windows users should use Powershell as their main entry point for commands. To use `gcloud` on Windows you must install a small package that interfaces with Google Cloud SDK. See here: https://cloud.google.com/tools/powershell/docs/quickstart
 
 To use Git commands on Windows you can either install [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) (not recommended) or depend on the pre-installed version of Git in WSL. To leverage WSL prefix `wsl` to Git commands. For example, to clone this repository open Powershell and execute:
 ```
@@ -53,3 +54,19 @@ Development is expected to be done using VSCode [within a container](https://cod
 VScode must be installed on the local machine with some dependencies:
 - [VSCode](https://code.visualstudio.com/download)
 - [Remote - Containers (VSCode Extension)](https://code.visualstudio.com/docs/remote/containers)
+
+# Setup GCP
+- Install [Google Cloud SDK](https://cloud.google.com/sdk/docs/install). See [Note on Windows](#note-on-windows).
+- [Enable billing](https://cloud.google.com/billing/docs/how-to/modify-project)
+- [Enable API](https://support.google.com/googleapi/answer/6158841?hl=en)
+- [Enable services](https://cloud.google.com/container-registry/docs/enable-service). Use the GCP UI.
+- [Setup authentication](https://cloud.google.com/container-registry/docs/advanced-authentication). Note: unless otherwise configured your "Windows Domain" is likely `WORKGROUP` and can be left blank.
+
+```
+gcloud init
+gcloud auth login
+gcloud auth configure-docker
+gcloud config set run/region us-west1
+gcloud services enable containerregistry.googleapis.com
+gcloud run deploy --image=gcr.io/python-base-325100/python_base-prod:latest
+```

@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# retreive configuration
+source configure.sh
+
 # retreive absolute path and parent directory
 # when running bash in WSL these will not behave as expected
 ABSOLUTE_PATH=$(pwd)
@@ -14,28 +17,6 @@ BASE_IMAGE_NAME=${INFERED_REPO_NAME}-base
 DEV_IMAGE_NAME=${INFERED_REPO_NAME}-dev
 PROD_IMAGE_NAME=${INFERED_REPO_NAME}-prod
 
-###################
-# setup flask app #
-###################
-# configure gunicorn server. used to configure gunicorn commands
-# set APP_LOCATION to main entrypoint for flask app
-FLASK_APP_MODULE_LOCATION=flask_app
-# set APP_METHOD_NAME to name of application defined in python
-FLASK_APP_NAME_IN_CODE=app
-# use default flask port 5000
-FLASK_APP_PORT=5000
-# set workers to number of cpu cores
-FLASK_APP_WORKERS=1
-FLASK_APP_THREADS=8
-# timeout is set to 0 to disable the timeouts of the workers to allow Google Cloud Run to handle instance scaling
-FLASK_APP_TIMEOUT=0
-
-##########################
-# choose coin-or solvers #
-##########################
-# use y or n for each variable
-INCLUDE_CBC=y
-
 # all builds use the same args
 DOCKER_BUILD_WITH_ARGS="docker build \
     --build-arg FLASK_APP_MODULE_LOCATION_ARG=${FLASK_APP_MODULE_LOCATION} \
@@ -44,13 +25,18 @@ DOCKER_BUILD_WITH_ARGS="docker build \
     --build-arg FLASK_APP_WORKERS_ARG=${FLASK_APP_WORKERS} \
     --build-arg FLASK_APP_THREADS_ARG=${FLASK_APP_THREADS} \
     --build-arg FLASK_APP_TIMEOUT_ARG=${FLASK_APP_TIMEOUT} \
+    --build-arg INCLUDE_CBC=${INCLUDE_CBC} \
+    --build-arg GCLOUD_PROJECT_ID_ARG=${GCLOUD_PROJECT_ID} \
+    --build-arg GCLOUD_REGION_ARG=${GCLOUD_REGION} \
+    --build-arg GCLOUD_SERVICE_NAME_ARG=${GCLOUD_SERVICE_NAME} \
+    --build-arg GCLOUD_ALLOW_UNAUTHENTICATED_PARAM_ARG=${GCLOUD_ALLOW_UNAUTHENTICATED_PARAM} \
+    --build-arg PROD_IMAGE_NAME_ARG=${PROD_IMAGE_NAME}:latest \
     --build-arg BASE_IMAGE_NAME_ARG=${BASE_IMAGE_NAME}:latest"
 
 
 function build_image_base() {
-    docker build \
+    ${DOCKER_BUILD_WITH_ARGS} \
     --tag ${BASE_IMAGE_NAME}:latest \
-    --build-arg INCLUDE_CBC=${INCLUDE_CBC} \
     --file docker/Dockerfile.base .
 }
 function build_image_dev() {
@@ -79,6 +65,10 @@ elif [ "$1" = "--build" ]; then
     build_image_prod && \
     build_image_dev && \
     docker image prune --force
+elif [ "$1" = "--build-prod" ]; then
+    build_image_base && \
+    build_image_prod && \
+    docker image prune --force
 elif [ "$1" = "--clean-docker" ]; then
     docker system prune $2
 elif [ "$1" = "--enter-dev" ]; then
@@ -86,9 +76,11 @@ elif [ "$1" = "--enter-dev" ]; then
     -it \
     --rm \
     --entrypoint="" \
+    --env PORT=${FLASK_APP_PORT} \
     --workdir=/app \
     --env PYTHONPATH=/app \
     --volume ${ABSOLUTE_PATH}:/app \
+    --volume //var/run/docker.sock:/var/run/docker.sock \
     --publish ${FLASK_APP_PORT}:${FLASK_APP_PORT} \
     --name="${DEV_IMAGE_NAME}-bash" \
     ${DEV_IMAGE_NAME}:latest \
@@ -100,17 +92,19 @@ elif [ "$1" = "--enter-prod" ]; then
     docker run \
     -it \
     --rm \
+    --env PORT=${FLASK_APP_PORT} \
     --entrypoint="" \
     --workdir=/app \
     --publish ${FLASK_APP_PORT}:${FLASK_APP_PORT} \
     --name="${PROD_IMAGE_NAME}-bash" \
     ${PROD_IMAGE_NAME}:latest \
     /bin/bash
-elif [ "$1" = "--run-prod" ]; then
+elif [ "$1" = "--run" ]; then
     # mimics what happens on deploy
     docker run \
+    --env PORT=${FLASK_APP_PORT} \
     --publish ${FLASK_APP_PORT}:${FLASK_APP_PORT} \
     ${PROD_IMAGE_NAME}:latest
 else
-printf "action ${1} not found\n"
+    printf "action ${1} not found\n"
 fi

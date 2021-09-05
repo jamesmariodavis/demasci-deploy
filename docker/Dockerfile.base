@@ -1,12 +1,15 @@
-# syntax=docker/dockerfile:1
-FROM python:3.8-alpine
+# syntax=docker/dockerfile:1.3
 
-# define build path and set to working directory
+############################
+# build and install source #
+############################
+FROM python:3.8-alpine as base-builder
+
 # build path is used to install dependencies in image
-ENV BUILD_PATH /build/
+ENV BUILD_PATH=/build
 WORKDIR ${BUILD_PATH}
 
-# install system dependencies
+# install dependencies
 RUN apk update && \
     apk add \
     pkgconfig \
@@ -19,19 +22,21 @@ RUN apk update && \
     bash \
     make \
     git \
-    curl && \
-    pip install --upgrade pip
+    curl \
+    && pip install --upgrade pip
 
 # build coin-or binaries
 ARG INCLUDE_CBC
-COPY build_coin-or.sh ${BUILD_PATH}/build_coin-or.sh
-RUN chmod u+x build_coin-or.sh &&\
-    ./build_coin-or.sh ${INCLUDE_CBC}
-
-# set paths for coin-or binaries
-ENV LD_LIBRARY_PATH /coin-or/lib
-ENV PATH="${PATH}:/coin-or/bin"
-ENV PATH="${PATH}:/coin-or/lib"
+RUN mkdir /coin-or &&\
+    git clone https://www.github.com/coin-or/coinbrew &&\
+    chmod u+x coinbrew/coinbrew &&\
+    if [ ${INCLUDE_CBC} = true ]; then \
+    ./coinbrew/coinbrew build Cbc \
+    --prefix=/coin-or \
+    --no-prompt \
+    --latest-release \
+    --static ADD_FFLAGS=-fallow-argument-mismatch ;\
+    fi
 
 # poetry stuff
 ENV PYTHONUNBUFFERED=1 \
@@ -46,17 +51,52 @@ ENV PYTHONUNBUFFERED=1 \
     POETRY_NO_INTERACTION=1
 
 ENV PATH="${PATH}:/root/.local/bin"
-
-# Install Poetry and update path - respects $POETRY_VERSION & $POETRY_HOME
-RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
 ENV PATH="${PATH}:${POETRY_HOME}/bin"
-
-# allow statements and log messages to immediately appear in the Knative logs in server
-ENV PYTHONUNBUFFERED True
 
 # copy files for poetry install
 COPY pyproject.toml ${BUILD_PATH}/pyproject.toml
 COPY poetry.lock ${BUILD_PATH}/poetry.lock
 
-# install python and production packages
-RUN poetry install --no-dev
+# Install Poetry, python, and libraries - respects $POETRY_VERSION & $POETRY_HOME
+RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python - &&\
+    poetry install --no-dev
+
+####################
+# build base image #
+####################
+FROM python:3.8-alpine
+
+# copy coin-or binaries and add to path
+COPY --from=base-builder /coin-or /coin-or
+ENV PATH="${PATH}:/coin-or/bin"\
+    PATH="${PATH}:/coin-or/lib" \
+    LD_LIBRARY_PATH=/coin-or/lib
+
+# copy python and libraries
+COPY --from=base-builder /usr/local/bin /usr/local/bin
+COPY --from=base-builder /usr/local/lib/python3.8 /usr/local/lib/python3.8
+
+# install minimal dependencies for convenience
+RUN apk add \
+    make \
+    curl \
+    bash &&\
+    pip install --upgrade pip
+
+# allow statements and log messages to immediately appear in the Knative logs in server
+ENV PYTHONUNBUFFERED=True
+
+# capture flask app args passed from build script
+# see scripts.sh for passed values
+ARG FLASK_APP_MODULE_LOCATION_ARG
+ARG FLASK_APP_NAME_IN_CODE_ARG
+ARG FLASK_APP_WORKERS_ARG
+ARG FLASK_APP_THREADS_ARG
+ARG FLASK_APP_TIMEOUT_ARG
+
+# inject passed arguments as permanent environment variables
+ENV FLASK_APP_MODULE_LOCATION=${FLASK_APP_MODULE_LOCATION_ARG}\
+    FLASK_APP_NAME_IN_CODE=${FLASK_APP_NAME_IN_CODE_ARG} \
+    FLASK_APP_WORKERS=${FLASK_APP_WORKERS_ARG} \
+    FLASK_APP_THREADS=${FLASK_APP_THREADS_ARG} \
+    FLASK_APP_TIMEOUT=${FLASK_APP_TIMEOUT_ARG}

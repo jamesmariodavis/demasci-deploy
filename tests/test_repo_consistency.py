@@ -40,18 +40,18 @@ def _get_string_from_file(
 ##############################################
 # ensure flask app names configured properly #
 ##############################################
-SCRIPTS_FILE_PATH = os.path.join(ROOT_DIR, 'scripts.sh')
+CONFIGURE_FILE_PATH = os.path.join(ROOT_DIR, 'configure.sh')
 
 # retreive referenced module for flask server
 flask_app_file_location_re = re.compile(r'^FLASK_APP_MODULE_LOCATION[]*=[]*(.*)')
 try:
     referenced_module_location = _get_string_from_file(
         match_object=flask_app_file_location_re,
-        file_path=SCRIPTS_FILE_PATH,
+        file_path=CONFIGURE_FILE_PATH,
     )
 except ConsistencyException:
     err_str = '{} does not have proper flask app configuration. expected unique match for {}'.format(
-        SCRIPTS_FILE_PATH,
+        CONFIGURE_FILE_PATH,
         flask_app_file_location_re.pattern,
     )
     raise ConsistencyException(err_str)
@@ -61,7 +61,7 @@ infered_python_file_path = os.path.join(ROOT_DIR, infered_python_file)
 # check if referenced module exists
 if not os.path.exists(infered_python_file_path):
     err_str = '{} references flask module {}. does not exist'.format(
-        SCRIPTS_FILE_PATH,
+        CONFIGURE_FILE_PATH,
         infered_python_file,
     )
     raise ConsistencyException(err_str)
@@ -71,11 +71,11 @@ docker_flask_app_name_re = re.compile(r'^FLASK_APP_NAME_IN_CODE[ ]*=[ ]*(.*)')
 try:
     referenced_flask_app_name = _get_string_from_file(
         match_object=docker_flask_app_name_re,
-        file_path=SCRIPTS_FILE_PATH,
+        file_path=CONFIGURE_FILE_PATH,
     )
 except ConsistencyException:
     err_str = '{} does not have proper flask app configuration. expected unique match for {}'.format(
-        SCRIPTS_FILE_PATH,
+        CONFIGURE_FILE_PATH,
         docker_flask_app_name_re.pattern,
     )
     raise ConsistencyException(err_str)
