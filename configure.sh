@@ -39,7 +39,9 @@ FLASK_APP_MODULE_LOCATION=flask_app
 FLASK_APP_NAME_IN_CODE=app
 
 # use default flask port 5000 for development
-# port is injected into container when deployed
+# port is injected during deployment as PORT env var
+# see: https://cloud.google.com/run/docs/reference/container-contract
+# local container runs inject FLASK_APP_PORT to PORT env var
 FLASK_APP_PORT=5000
 
 # set workers to number of cpu cores
@@ -54,4 +56,4 @@ FLASK_APP_TIMEOUT=0
 ##########################
 
 # use to include/exclude CBC: https://github.com/coin-or/Cbc
-INCLUDE_CBC=false
+INCLUDE_CBC=true

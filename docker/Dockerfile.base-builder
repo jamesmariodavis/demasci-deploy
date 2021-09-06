@@ -1,0 +1,63 @@
+# syntax=docker/dockerfile:1.3
+# builds packages requiring long compile times
+# freeze numpy version to ensure it does not require updating
+# freeze pandas version to ensure it does not require updating
+FROM python:3.8-alpine
+
+# build path is used to install dependencies in image
+ENV BUILD_PATH=/build
+WORKDIR ${BUILD_PATH}
+
+# install dependencies of build
+RUN apk update && \
+    apk add \
+    pkgconfig \
+    gcc \
+    g++ \
+    gfortran \
+    blas \
+    lapack \
+    patch \
+    bash \
+    make \
+    git \
+    curl \
+    musl-dev \
+    linux-headers \
+    && pip install --upgrade pip
+
+# build coin-or binaries
+ARG INCLUDE_CBC
+RUN mkdir /coin-or &&\
+    git clone https://www.github.com/coin-or/coinbrew &&\
+    chmod u+x coinbrew/coinbrew &&\
+    if [ ${INCLUDE_CBC} = true ]; then \
+    ./coinbrew/coinbrew build Cbc \
+    --prefix=/coin-or \
+    --no-prompt \
+    --latest-release \
+    --static ADD_FFLAGS=-fallow-argument-mismatch ;\
+    fi
+
+# poetry stuff
+ENV PYTHONUNBUFFERED=1 \
+    POETRY_VERSION=1.1.6 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=off \
+    PIP_DISABLE_PIP_VERSION_CHECK=on \
+    PIP_DEFAULT_TIMEOUT=100 \
+    POETRY_HOME="/opt/poetry" \
+    POETRY_VIRTUALENVS_IN_PROJECT=false \
+    POETRY_VIRTUALENVS_CREATE=false \
+    POETRY_NO_INTERACTION=1
+
+ENV PATH="${PATH}:/root/.local/bin"
+ENV PATH="${PATH}:${POETRY_HOME}/bin"
+
+# copy files for poetry install
+COPY pyproject.toml ${BUILD_PATH}/pyproject.toml
+COPY poetry.lock ${BUILD_PATH}/poetry.lock
+
+# Install Poetry, python, and libraries - respects $POETRY_VERSION & $POETRY_HOME
+RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python - &&\
+    poetry install --no-dev

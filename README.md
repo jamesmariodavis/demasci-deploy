@@ -17,9 +17,9 @@ All commands in `scripts.sh` are intended to be run on local machine.
 All commands in `Makefile` are intended to be run in development container.
 Set configuration in `configure.sh`. URLs may not be known until after first deploy.
 
-Build all containers on local system (this can take ~20m on first run):
+Build all containers on local system (this can take several minutes on first run):
 ```
-bash scripts.sh --build
+bash scripts.sh --build-all
 ```
 Enter dev container:
 ```

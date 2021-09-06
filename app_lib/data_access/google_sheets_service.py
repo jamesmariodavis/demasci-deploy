@@ -1,5 +1,5 @@
-from googleapiclient.discovery import build
 from typing import List, Any
+from googleapiclient.discovery import build
 
 
 class GoogleSheetsService:
@@ -21,3 +21,6 @@ class GoogleSheetsService:
         ).execute()
         values = result.get('values', [])
         return values
+
+    def get_sheet_as_frame(self, spreadsheet_id: str, sheet_name: str) -> Any:
+        raise NotImplementedError()

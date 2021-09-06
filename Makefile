@@ -15,6 +15,12 @@ test-mypy:
 	echo 'running mypy ...' &&\
 	mypy .
 
+.PHONY: test-pylint
+test-pylint:
+	echo 'running pylint ...' &&\
+	pylint app_lib &&\
+	pylint tests
+
 .PHONY: test-pytest-local
 test-pytest-local:
 	echo 'running pytest (local tests only) ...' &&\
@@ -30,12 +36,13 @@ test-pytest:
 	--cov=app_lib \
 	--cov-fail-under ${PYTEST_FAIL_UNDER_COVERAGE}
 
-
+# run all tests that do not require internet
 .PHONY: test-local
-test-local: test-consistency test-mypy test-pytest-local
+test-local: test-consistency test-mypy test-pylint test-pytest-local
 
+# run all tests
 .PHONY: test
-test: test-consistency test-mypy test-pytest
+test: test-consistency test-mypy test-pylint test-pytest
 
 #####################
 # Flask Development #
