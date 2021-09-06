@@ -31,7 +31,7 @@ make gcloud-auth
 ```
 Deploy code to Cloud Run
 ```
-make delpoy
+make gcloud-delpoy
 ```
 
 To test deployment works URLs must be appropriately configured in `configure.sh`.
@@ -107,16 +107,48 @@ To leverage GCP you will need to:
 - [Create a Google Cloud account](https://cloud.google.com/)
 - [Create a project](https://cloud.google.com/resource-manager/docs/creating-managing-projects)
 - [Enable billing](https://cloud.google.com/billing/docs/how-to/modify-project). Navigate to Billing in Google Cloud Console.
-- [Enable Google Run API](https://support.google.com/googleapi/answer/6158841?hl=en). This is non-essential: the first deployment will prompt for enabling required APIs.
 - [Enable Container Registry service](https://cloud.google.com/container-registry/docs/enable-service). Navigate to Container Registry in Google Cloud Console.
 
-There are many avaiable services.
+We will use a Service Account to manage access to resources in GCP:
+- [Create a Service Account](https://cloud.google.com/iam/docs/creating-managing-service-accounts). Grant this account full access by giving it role `Owner`. Add yourself as an admin for this service account.
+- Create a json key for the service account and save it as `google_key.json` at the top level of the repo.
+
+This Service Account will be referenced in various places:
+- `client_email` field of `google_key.json`
+- `GCLOUD_SERVICE_ACCOUNT` in `configure.sh`
+- An entity to share any Google Sheet with that the code will read/write
+
+There are many avaiable services in GCP.
 This repo depends on a small number of them.
 It is useful to pin these services in Google Cloud Console:
-- Cloud RUN
+- Cloud Run
 - Container Registry
 - IAM & Admin
+
+We will leverage seval APIs.
+Activate these APIs by going to `APIs and Services` and searching for them in Library.
+- Cloud Run API
+- Google Sheets API
+- Google Drive API
 
 Once complete add key information, especially project ID, to `configure.sh`. URL information may not be available until after first deployment.
 
 For common issues with Cloud Run see [here](https://cloud.google.com/run/docs/troubleshooting). It will be especially important to manage permissions related to the Cloud Run Invoker role.
+
+## Google Sheet Access
+Visit [Google Sheets Homepage](https://docs.google.com/spreadsheets/u/0/) to create and manage Google Sheets.
+To access a Google Sheet (GSheet) from code it must be shared with the Google Service Account.
+
+# VSCode
+Read [VSCode Setup](https://code.visualstudio.com/docs/setup/setup-overview). Be sure to make VSCode callable from the command line with `code`.
+
+Prior to opening VSCode you **must** build all containers.
+When opening VSCode in the top level folder it will attempt to mount inside the dev container.
+After VSCode opens in a container it will install Extensions.
+To load the extension VSCode must be restarted: go to the Extensions tab and select the restart option from any extension requiring it.
+If something is not working as expected it is likely because an extension has not been loaded.
+
+Useful reading to understand VSCode features:
+- [Code Navigation](https://code.visualstudio.com/docs/editor/editingevolved)
+- [Refactoring](https://code.visualstudio.com/docs/editor/refactoring)
+- [Keybindings](https://code.visualstudio.com/docs/getstarted/keybindings).

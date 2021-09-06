@@ -22,7 +22,10 @@ GCLOUD_ALLOW_UNAUTHENTICATED_PARAM='--no-allow-unauthenticated'
 
 # url will be created after first deployment
 # do not include trailing slash
-GCLOUD_APP_URL='https://gcloud-flask-app-r7c6sed2ga-uw.a.run.app'
+GCLOUD_APP_URL="https://gcloud-flask-app-r7c6sed2ga-uw.a.run.app"
+
+# service account must be created in console
+GCLOUD_SERVICE_ACCOUNT="admin-171@python-base-325119.iam.gserviceaccount.com"
 
 
 ###################
@@ -51,4 +54,4 @@ FLASK_APP_TIMEOUT=0
 ##########################
 
 # use to include/exclude CBC: https://github.com/coin-or/Cbc
-INCLUDE_CBC=true
+INCLUDE_CBC=false

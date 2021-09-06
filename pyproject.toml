@@ -4,10 +4,18 @@ version = "0.0.1"
 description = "Flask Application"
 authors = ["James Davis <jamesmariodavis@gmail.com>"]
 
+[tool.pytest.ini_options]
+markers=[
+    "externals_deps: test requires internet connection and valid secrets",
+]
+
 [tool.poetry.dependencies]
 python = "^3.8.11"
 Flask = "^2.0.1"
 gunicorn = "^20.1.0"
+google-api-python-client = "^2.19.1"
+google-auth-httplib2 = "^0.1.0"
+google-auth-oauthlib = "^0.4.6"
 
 [tool.poetry.dev-dependencies]
 yapf = "^0.31.0"

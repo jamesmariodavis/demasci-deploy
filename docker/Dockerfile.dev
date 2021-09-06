@@ -2,6 +2,9 @@
 ARG BASE_IMAGE_NAME_ARG
 FROM ${BASE_IMAGE_NAME_ARG}
 
+# where code will be mounted in docker container
+ARG DOCKER_CODE_MOUNT_DIRECTORY_ARG
+
 # set flags for internal use
 ENV IS_PROD false
 ENV IS_DEV true
@@ -28,16 +31,30 @@ ARG GCLOUD_PROJECT_ID_ARG
 ARG PROD_IMAGE_NAME_ARG
 ARG GCLOUD_SERVICE_NAME_ARG
 ARG GCLOUD_ALLOW_UNAUTHENTICATED_PARAM_ARG
+ARG GCLOUD_SERVICE_ACCOUNT_ARG
+ARG GCLOUD_APP_URL_ARG
 ENV PROD_IMAGE_NAME=${PROD_IMAGE_NAME_ARG}\
     GCLOUD_PROJECT_ID=${GCLOUD_PROJECT_ID_ARG} \
     GCLOUD_REGION=${GCLOUD_REGION_ARG} \
     GCLOUD_SERVICE_NAME=${GCLOUD_SERVICE_NAME_ARG}\
-    GCLOUD_ALLOW_UNAUTHENTICATED_PARAM=${GCLOUD_ALLOW_UNAUTHENTICATED_PARAM_ARG}
+    GCLOUD_ALLOW_UNAUTHENTICATED_PARAM=${GCLOUD_ALLOW_UNAUTHENTICATED_PARAM_ARG}\
+    GCLOUD_APP_URL=${GCLOUD_APP_URL_ARG} \
+    GCLOUD_SERVICE_ACCOUNT=${GCLOUD_SERVICE_ACCOUNT_ARG}
 
 # configure gcloud
 RUN gcloud config set run/region ${GCLOUD_REGION} &&\
     gcloud config set project ${GCLOUD_PROJECT_ID} &&\
     gcloud auth configure-docker
+
+# set credentials path for gcloud
+# https://cloud.google.com/docs/authentication/production#auth-cloud-implicit-python
+ENV GOOGLE_APPLICATION_CREDENTIALS=${DOCKER_CODE_MOUNT_DIRECTORY_ARG}/google_key.json
+
+# PORT is part of the container contract in Cloud Run
+# https://cloud.google.com/run/docs/reference/container-contract
+# simulate PORT contract with static reference in dev
+ARG FLASK_APP_PORT_ARG
+ENV PORT=${FLASK_APP_PORT_ARG}
 
 # re-install poetry for dev use
 # poetry stuff
@@ -52,8 +69,8 @@ ENV PYTHONUNBUFFERED=1 \
     POETRY_VIRTUALENVS_CREATE=false \
     POETRY_NO_INTERACTION=1
 
-ENV PATH="${PATH}:/root/.local/bin"
-ENV PATH="${PATH}:${POETRY_HOME}/bin"
+ENV PATH="${PATH}:/root/.local/bin"\
+    PATH="${PATH}:${POETRY_HOME}/bin"
 
 # copy files for poetry install
 COPY pyproject.toml ${BUILD_PATH}/pyproject.toml
@@ -62,10 +79,6 @@ COPY poetry.lock ${BUILD_PATH}/poetry.lock
 # Install Poetry, python, and libraries - respects $POETRY_VERSION & $POETRY_HOME
 RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python - &&\
     poetry install
-
-# copy port arg as env variable for reference
-ARG FLASK_APP_PORT_ARG
-ENV PORT=${FLASK_APP_PORT_ARG}
 
 # clean up build
 WORKDIR /

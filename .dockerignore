@@ -7,3 +7,4 @@ README.md
 .mypy_cache
 .pytest_cache
 .coverage
+google_key.json

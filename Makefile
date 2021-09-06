@@ -1,5 +1,6 @@
 ABSOLUTE_PATH=$(abspath .)
 GCLOUD_IDENTITY_TOKEN=$(shell gcloud auth print-identity-token)
+PYTEST_FAIL_UNDER_COVERAGE=50
 
 #########
 # Tests #
@@ -19,10 +20,22 @@ test-pytest-local:
 	echo 'running pytest (local tests only) ...' &&\
 	pytest \
 	--cov=app_lib \
-	--cov-fail-under 50
+	--cov-fail-under ${PYTEST_FAIL_UNDER_COVERAGE} \
+	-m "not external_deps"
+
+.PHONY: test-pytest
+test-pytest:
+	echo 'running pytest ...' &&\
+	pytest \
+	--cov=app_lib \
+	--cov-fail-under ${PYTEST_FAIL_UNDER_COVERAGE}
+
 
 .PHONY: test-local
-test-local: test-consistency test-mypy
+test-local: test-consistency test-mypy test-pytest-local
+
+.PHONY: test
+test: test-consistency test-mypy test-pytest
 
 #####################
 # Flask Development #
@@ -55,9 +68,13 @@ gunicorn-server:
 # Deployment #
 ##############
 
+# .PHONY: gcloud-auth
+# gcloud-auth:
+# 	gcloud auth login
+
 .PHONY: gcloud-auth
 gcloud-auth:
-	gcloud auth login
+	gcloud auth activate-service-account ${GCLOUD_SERVICE_ACCOUNT} --key-file="google_key.json"
 
 .PHONY: gcloud-deploy
 gcloud-deploy:

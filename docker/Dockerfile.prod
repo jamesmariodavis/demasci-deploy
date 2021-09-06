@@ -2,12 +2,17 @@
 ARG BASE_IMAGE_NAME_ARG
 FROM ${BASE_IMAGE_NAME_ARG}
 
+# where code will be mounted in docker container
+ARG DOCKER_CODE_MOUNT_DIRECTORY_ARG
+
 # set flags for internal use
 ENV IS_PROD true
 ENV IS_DEV false
 
 # copy code and set work directory
-ENV APP_HOME /app/
+# note that code is copied to image in prod
+# changes to code after build will not affect copied code
+ENV APP_HOME=${DOCKER_CODE_MOUNT_DIRECTORY_ARG}
 WORKDIR ${APP_HOME}
 ENV PYTHONPATH=${APP_HOME}
 COPY . /${APP_HOME}/
