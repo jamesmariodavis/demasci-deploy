@@ -49,7 +49,7 @@ DOCKER_BUILD_WITH_ARGS="docker build \
 function build_image_base_builder() {
     ${DOCKER_BUILD_WITH_ARGS} \
     --tag ${BASE_BUILDER_IMAGE_NAME} \
-    --file docker/Dockerfile.base .
+    --file docker/Dockerfile.base-builder .
 }
 function build_image_base() {
     ${DOCKER_BUILD_WITH_ARGS} \
