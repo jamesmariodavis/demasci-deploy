@@ -110,7 +110,7 @@ elif [ "$1" = "--enter-dev" ]; then
     --workdir=/app \
     --env PYTHONPATH=${DOCKER_CODE_MOUNT_DIRECTORY} \
     --volume ${ABSOLUTE_PATH}:${DOCKER_CODE_MOUNT_DIRECTORY} \
-    --volume //var/run/docker.sock:/var/run/docker.sock \
+    --volume /var/run/docker.sock:/var/run/docker.sock \
     --publish ${FLASK_APP_PORT}:${FLASK_APP_PORT} \
     --name="${INFERED_REPO_NAME}-dev-bash" \
     ${DEV_IMAGE_NAME} \
