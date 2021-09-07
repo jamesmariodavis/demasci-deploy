@@ -51,14 +51,14 @@ test: test-consistency test-mypy test-pylint test-pytest
 # references env variables defined in Dockerfile
 .PHONY: flask-server-dev
 flask-server-dev:
-	export FLASK_APP=${FLASK_APP_FILE_LOCATION} &&\
+	export FLASK_APP=${FLASK_APP_MODULE_LOCATION} &&\
 	export FLASK_ENV=development &&\
 	flask run --host=0.0.0.0
 
 # references env variables defined in Dockerfile
 .PHONY: flask-server
 flask-server:
-	export FLASK_APP=${FLASK_APP_FILE_LOCATION} &&\
+	export FLASK_APP=${FLASK_APP_MODULE_LOCATION} &&\
 	flask run --host=0.0.0.0
 
 # references env variables defined in Dockerfile

@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Report</title>
+</head>
+
+<body>
+    {% for figure in figures %}
+    {{ figure | safe }}
+    {% endfor %}
+</body>
+
+</html>
