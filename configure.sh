@@ -1,3 +1,7 @@
+######################################################
+# Note: rebuild dev image after configuration update #
+######################################################
+
 ######################
 # gcloud identifiers #
 ######################
@@ -18,7 +22,7 @@ GCLOUD_SERVICE_NAME=gcloud-flask-app
 # Whether to enable allowing unauthenticated access to the service.
 # This may take a few moments to take effect.
 # Use --allow-unauthenticated to enable and --no-allow-unauthenticated to disable.
-GCLOUD_ALLOW_UNAUTHENTICATED_PARAM='--no-allow-unauthenticated'
+GCLOUD_ALLOW_UNAUTHENTICATED_PARAM='--allow-unauthenticated'
 
 # url will be created after first deployment
 # do not include trailing slash

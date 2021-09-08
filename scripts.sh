@@ -141,7 +141,7 @@ elif [ "$1" = "--run" ]; then
     --rm \
     --env PORT=${FLASK_APP_PORT} \
     --publish ${FLASK_APP_PORT}:${FLASK_APP_PORT} \
-    --name"${INFERED_REPO_NAME}-prod-run"
+    --name="${INFERED_REPO_NAME}-prod-run" \
     ${PROD_IMAGE_NAME}
 else
     printf "action ${1} not found\n"

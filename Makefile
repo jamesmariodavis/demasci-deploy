@@ -75,6 +75,10 @@ gunicorn-server:
 # Deployment #
 ##############
 
+.PHONY: build-prod
+build-prod:
+	bash scripts.sh --build-prod
+
 .PHONY: gcloud-auth
 gcloud-auth:
 	gcloud auth activate-service-account ${GCLOUD_SERVICE_ACCOUNT} --key-file="google_key.json"

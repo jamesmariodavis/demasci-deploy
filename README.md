@@ -172,4 +172,5 @@ If something is not working as expected it is likely because an extension has no
 Useful reading to understand VSCode features:
 - [Code Navigation](https://code.visualstudio.com/docs/editor/editingevolved)
 - [Refactoring](https://code.visualstudio.com/docs/editor/refactoring)
-- [Keybindings](https://code.visualstudio.com/docs/getstarted/keybindings).
+- [Data Science Tools](https://code.visualstudio.com/docs/datascience/data-science-tutorial)
+- [Keybindings](https://code.visualstudio.com/docs/getstarted/keybindings)
