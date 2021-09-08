@@ -51,11 +51,13 @@ function build_image_base_builder() {
     --tag ${BASE_BUILDER_IMAGE_NAME} \
     --file docker/Dockerfile.base-builder .
 }
+
 function build_image_base() {
     ${DOCKER_BUILD_WITH_ARGS} \
     --tag ${BASE_IMAGE_NAME} \
     --file docker/Dockerfile.base .
 }
+
 function build_image_dev() {
     ${DOCKER_BUILD_WITH_ARGS} \
     --tag ${DEV_IMAGE_NAME} \

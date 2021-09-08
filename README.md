@@ -18,7 +18,8 @@ All commands in `scripts.sh` are intended to be run on local machine.
 All commands in `Makefile` are intended to be run in development container.
 Set configuration in `configure.sh`. URLs may not be known until after first deploy.
 
-Sign up for Google Cloud Services and follow [instructions for setup](#google-cloud-platform).
+Sign up for Google Cloud Services and follow [instructions for setup](#google-cloud-platform). 
+Create a file called `google_key.json` with the credentials for the associated service account at the top level of the repo.
 
 Build all containers on local system (this can take several minutes on first run):
 ```
@@ -51,7 +52,8 @@ The name of the upstream fetch source in Docker must match the top level directo
 This impacts coordinating Docker image names in `scripts.sh` and `.devcontainer/devcontainer.json`.
 
 The flask application file path is a required reference when starting the webserver.
-The current file name is `flask_app.py`. The associated reference is `flask_app`.
+The current file name is `flask_app.py`. 
+The associated reference is `flask_app`.
 The referneced is present in `configure.sh` as environment variable.
 This and requires manual confguration.
 
