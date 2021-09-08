@@ -13,6 +13,7 @@ It is expected that [VSCode](#vscode) is used for development.
 Throughout the README we reference variables to be replaced by the user with `<variable>`.
 
 ## Quick Start
+If you are using Windows please read [that section](#note-on-windows) first.
 All commands in `scripts.sh` are intended to be run on local machine.
 All commands in `Makefile` are intended to be run in development container.
 Set configuration in `configure.sh`. URLs may not be known until after first deploy.
