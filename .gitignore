@@ -1,8 +1,10 @@
-/docker/.aws/credentials
-/docker/env_file
-
+# ignore procedurally generated cache
 .mypy_cache
 .pytest_cache
 .coverage
 
+# ignore secrets
 google_key.json
+
+# ignore temporary working files
+plotly_figure.html

@@ -47,18 +47,22 @@ The repo name is used to tag Docker images.
 The name of the upstream fetch source in Docker must match the top level directory name locally.
 This impacts coordinating Docker image names in `scripts.sh` and `.devcontainer/devcontainer.json`.
 
-The flask application file and name (distinct from the application name) is a required reference when starting the webserver.
-The current file name is `flask_app.py`.
-This is referenced in `configure.sh` as an environment variable and requires manual coordination.
+The flask application file path is a required reference when starting the webserver.
+The current file name is `flask_app.py`. The associated reference is `flask_app`.
+The referneced is present in `configure.sh` as environment variable.
+This and requires manual confguration.
 
 There is a reference to a flask app name in the flask application file (`flask_app.py`).
 Currently it is `app`.
-This is referenced in `configure.sh` as an environment variable and requires manual configuration.
+This name is referenced in `configure.sh` as an environment variable.
+This requires manual configuration.
 
 ## Note on Windows
-This is a Linux/Mac centric codebase. However, this can easily be used in Windows. Windows usage requires (in addition to the requirements below) WSL 2.0 and associated Linux distro.
+This is a Linux/Mac centric codebase. 
+However, the only platform specific component is the Bash script `scripts.sh` which manages various Docker actions.
+This can easily be executed on Windows using WSL 2.0 and associated Linux distro.
 - [WSL](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
-- [latest Ubuntu LTS Release for WSL](https://www.microsoft.com/en-us/p/ubuntu-2004-lts/9n6svws3rx71) Search Windows Marketplace for updated version.
+- [Latest Ubuntu LTS Release for WSL](https://www.microsoft.com/en-us/p/ubuntu-2004-lts/9n6svws3rx71) Search Windows Marketplace for updated version.
 
 Windows users should use Powershell as their main entry point for commands.
 
@@ -90,16 +94,7 @@ bash scripts.sh <argument>
 
 Configuration of the repository is primarily captured in `configure.sh`.
 Read and modify values there as appropriate for your use case.
-There are additional configuration components in `pyproject.toml`.
-
-## VSCode
-Development is expected to be done using VSCode [within a container](https://code.visualstudio.com/docs/remote/containers).
-The folder `.devcontainer` contains the configuration for using VScode in a container, including all required extensions.
-This should work without modification.
-
-VScode must be installed on the local machine with some dependencies:
-- [VSCode](https://code.visualstudio.com/download)
-- [Remote - Containers (VSCode Extension)](https://code.visualstudio.com/docs/remote/containers)
+There are additional, less critical, configuration components in `pyproject.toml`.
 
 # Google Cloud Platform
 To use Google Cloud Platform (GCP) we interact the web UI, Google Cloud Console, rather than depend on scripting.
@@ -140,7 +135,16 @@ Visit [Google Sheets Homepage](https://docs.google.com/spreadsheets/u/0/) to cre
 To access a Google Sheet (GSheet) from code it must be shared with the Google Service Account.
 
 # VSCode
-Read [VSCode Setup](https://code.visualstudio.com/docs/setup/setup-overview). Be sure to make VSCode callable from the command line with `code`.
+Development is expected to be done using VSCode [within a container](https://code.visualstudio.com/docs/remote/containers).
+The folder `.devcontainer` contains the configuration for using VScode in a container, including all required extensions.
+This should work without modification.
+
+VScode must be installed on the local machine with some dependencies:
+- [VSCode](https://code.visualstudio.com/download)
+- [Remote - Containers (VSCode Extension)](https://code.visualstudio.com/docs/remote/containers)
+
+Read [VSCode Setup](https://code.visualstudio.com/docs/setup/setup-overview).
+Be sure to make VSCode callable from the command line with `code`.
 
 Prior to opening VSCode you **must** build all containers.
 When opening VSCode in the top level folder it will attempt to mount inside the dev container.

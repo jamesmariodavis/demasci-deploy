@@ -1,10 +1,18 @@
+# ignore all files intended for use on local system
 Dockerfile.*
 scripts.*
 README.md
 .git
 .DS_Store
 .devcontainer
+
+# ignore procedurally generated cache
 .mypy_cache
 .pytest_cache
 .coverage
+
+# ingore secrets
 google_key.json
+
+# ignore temporary working files
+plotly_figure.html

@@ -1,5 +1,6 @@
-from flask import Flask, render_template
+from flask import Flask
 from markupsafe import escape
+from app_lib import JinjaRender
 
 # flask app name in code
 app = Flask(__name__)
@@ -22,7 +23,10 @@ def show_user_profile(username: str) -> str:
 
 @app.route('/template')
 def template() -> str:
-    return render_template('list_of_figures.html', figures=['figure1', 'figure2'])
+    return JinjaRender.render_template(
+        template_name=JinjaRender.LIST_OF_FIGURES_TEMPLATE,
+        params={'figures': ['a', 'b']},
+    )
 
 
 if __name__ == '__main__':
