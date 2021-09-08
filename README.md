@@ -66,6 +66,16 @@ This can easily be executed on Windows using WSL 2.0 and associated Linux distro
 
 Windows users should use Powershell as their main entry point for commands.
 
+The default linux distro in WSL 2.0 must be set to the Ubuntu installation.
+To list all distros:
+```
+wsl --list --all
+```
+To set the default distro:
+```
+wsl --setdefault <DistributionName>
+```
+
 To use Git commands on Windows you can either install [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) (not recommended) or depend on the pre-installed version of Git in WSL.
 To leverage WSL prefix `wsl` to Git commands. For example, to clone this repository open Powershell and execute:
 ```

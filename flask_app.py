@@ -21,7 +21,7 @@ def show_user_profile(username: str) -> str:
     return 'User {}'.format(escape(username))
 
 
-@app.route('/template')
+@app.route('/example_plot')
 def template() -> str:
     return JinjaRender.render_template(
         template_name=JinjaRender.LIST_OF_FIGURES_TEMPLATE,
