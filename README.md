@@ -18,6 +18,8 @@ All commands in `scripts.sh` are intended to be run on local machine.
 All commands in `Makefile` are intended to be run in development container.
 Set configuration in `configure.sh`. URLs may not be known until after first deploy.
 
+Sign up for Google Cloud Services and follow [instructions for setup](#google-cloud-platform).
+
 Build all containers on local system (this can take several minutes on first run):
 ```
 bash scripts.sh --build-all
@@ -78,9 +80,11 @@ wsl --setdefault <DistributionName>
 ```
 
 To use Git commands on Windows you can either install [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) (not recommended) or depend on the pre-installed version of Git in WSL.
-To leverage WSL prefix `wsl` to Git commands. For example, to clone this repository open Powershell and execute:
+To leverage WSL prefix `wsl` to Git commands. 
+For example, to clone this repository to your home directory open Powershell and execute:
 ```
-wsl git clone
+cd ~
+wsl git clone https://github.com/jamesmariodavis/python_base.git
 ```
 Similarly for other commands prefixing `wsl` may be required.
 
