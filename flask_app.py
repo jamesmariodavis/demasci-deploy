@@ -1,6 +1,6 @@
 from flask import Flask
 from markupsafe import escape
-from app_lib import JinjaRender
+from app_lib.example_visualization import get_example_html_str
 
 # flask app name in code
 app = Flask(__name__)
@@ -23,10 +23,7 @@ def show_user_profile(username: str) -> str:
 
 @app.route('/example_plot')
 def template() -> str:
-    return JinjaRender.render_template(
-        template_name=JinjaRender.LIST_OF_FIGURES_TEMPLATE,
-        params={'figures': ['a', 'b']},
-    )
+    return get_example_html_str()
 
 
 if __name__ == '__main__':

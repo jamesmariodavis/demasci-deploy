@@ -1,10 +1,7 @@
 from typing import List
 import pandas as pd
 import plotly.graph_objs as go
-from app_lib import (
-    JinjaRender,
-    PlotlyHelpers,
-)
+from app_lib import PlotlyHelpers
 
 A_COL = 'a'
 B_COL = 'b'
@@ -13,11 +10,11 @@ EXAMPLE_FRAME_1 = pd.DataFrame({
     B_COL: [3, 6, 1],
 })
 EXAMPLE_FRAME_2 = pd.DataFrame({
-    A_COL: [1, 7, 5],
+    A_COL: [1, 5, 7],
     B_COL: [1, 2, 1],
 })
 EXAMPLE_FRAME_3 = pd.DataFrame({
-    A_COL: [2, -1, 8],
+    A_COL: [-1, 2, 8],
     B_COL: [1, 2, -3],
 })
 

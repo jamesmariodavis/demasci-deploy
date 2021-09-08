@@ -65,7 +65,7 @@ flask-server:
 .PHONY: gunicorn-server
 gunicorn-server:
 	gunicorn \
-	--bind ":${FLASK_APP_PORT}" \
+	--bind ":${PORT}" \
 	--workers ${FLASK_APP_WORKERS} \
 	--threads ${FLASK_APP_THREADS} \
 	--timeout ${FLASK_APP_TIMEOUT} \
@@ -74,10 +74,6 @@ gunicorn-server:
 ##############
 # Deployment #
 ##############
-
-# .PHONY: gcloud-auth
-# gcloud-auth:
-# 	gcloud auth login
 
 .PHONY: gcloud-auth
 gcloud-auth:
