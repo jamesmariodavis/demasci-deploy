@@ -11,7 +11,7 @@ SHEET2 = 'Sheet2'
 
 
 class TestGoogleSheets(BaseTestCase):
-    @pytest.mark.externals_deps
+    @pytest.mark.external_deps
     def test_get_values_from_range(self) -> None:
         google_sheets_service = GoogleSheetsService()
         returned_values = google_sheets_service.get_values_from_range(
@@ -22,7 +22,7 @@ class TestGoogleSheets(BaseTestCase):
         expected_values = [['1'], ['2', '3']]
         self.assertListEqual(returned_values, expected_values)
 
-    @pytest.mark.externals_deps
+    @pytest.mark.external_deps
     def test_get_sheet_as_frame(self) -> None:
         google_sheets_service = GoogleSheetsService()
         returned_frame = google_sheets_service.get_sheet_as_frame(

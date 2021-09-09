@@ -1,9 +1,7 @@
 from enum import Enum
-from typing import Collection, Optional
+from typing import Optional
 import pandas as pd
-import plotly
 import plotly.graph_objs as go
-from app_lib import JinjaRender
 
 
 class ScatterMode(Enum):
@@ -14,11 +12,6 @@ class ScatterMode(Enum):
 
 class PlotlyHelpers:
     SCATTER_MODE = ScatterMode
-
-    @staticmethod
-    def get_html_div_from_figure(figure: plotly.graph_objs.Figure) -> str:
-        html_div = plotly.io.to_html(fig=figure, include_plotlyjs='cdn', full_html=False)
-        return html_div
 
     @staticmethod
     def get_emtpy_figure() -> go.Figure:
@@ -43,15 +36,3 @@ class PlotlyHelpers:
             mode=scatter_mode.value,
         )
         figure.add_trace(scatter_trace)
-
-    @staticmethod
-    def render_figures_to_html(figures: Collection[go.Figure]) -> str:
-        html_divs = []
-        for figure in figures:
-            html_div = PlotlyHelpers.get_html_div_from_figure(figure=figure)
-            html_divs.append(html_div)
-        html_str = JinjaRender.render_template(
-            template_name=JinjaRender.LIST_OF_FIGURES_TEMPLATE,
-            params={'figures': html_divs},
-        )
-        return html_str

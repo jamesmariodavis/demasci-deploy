@@ -6,7 +6,7 @@ authors = ["James Davis <jamesmariodavis@gmail.com>"]
 
 [tool.pytest.ini_options]
 markers=[
-    "externals_deps: test requires internet connection and valid secrets",
+    "external_deps: test requires internet connection and valid secrets",
 ]
 
 # https://python-poetry.org/docs/dependency-specification/
@@ -22,6 +22,7 @@ Jinja2 = "^3.0.1"
 numpy = "1.21.2"
 # freeze pandas at exact version to prevent recompile
 pandas = "1.3.2"
+# freeze plotly at exact version to prevent recompile
 plotly = "5.3.1"
 
 [tool.poetry.dev-dependencies]

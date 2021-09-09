@@ -1,7 +1,10 @@
 from typing import List
 import pandas as pd
 import plotly.graph_objs as go
-from app_lib import PlotlyHelpers
+from app_lib import (
+    PlotlyHelpers,
+    JinjaRender,
+)
 
 A_COL = 'a'
 B_COL = 'b'
@@ -19,7 +22,7 @@ EXAMPLE_FRAME_3 = pd.DataFrame({
 })
 
 
-def get_example_figures() -> List[go.Figure]:
+def get_example_items() -> List[go.Figure]:
     # build figure 1
     figure_1 = PlotlyHelpers.get_emtpy_figure()
     PlotlyHelpers.add_scatter_plot_to_figure(
@@ -47,11 +50,11 @@ def get_example_figures() -> List[go.Figure]:
         scatter_mode=PlotlyHelpers.SCATTER_MODE.LINE,
     )
 
-    figures = [figure_1, figure_2]
-    return figures
+    list_of_items = [figure_1, figure_2, EXAMPLE_FRAME_1, EXAMPLE_FRAME_2]
+    return list_of_items
 
 
 def get_example_html_str() -> str:
-    figures = get_example_figures()
-    html_str = PlotlyHelpers.render_figures_to_html(figures=figures)
+    list_of_items = get_example_items()
+    html_str = JinjaRender.render_list_of_items_to_html(list_of_items=list_of_items)
     return html_str
