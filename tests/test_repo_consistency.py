@@ -1,6 +1,7 @@
 # tests that repo conforms to expectations
 import os
 import re
+import subprocess
 from app_lib.app_paths import ROOT_DIR
 
 
@@ -9,6 +10,16 @@ class ConsistencyException(Exception):
 
 
 CONFIGURE_FILE_PATH = os.path.join(ROOT_DIR, 'configure.sh')
+GITIGNORE_FILE_PATH = os.path.join(ROOT_DIR, '.gitignore')
+
+
+def assert_all_files_windows_compatible() -> None:
+    std_out_str = subprocess.check_output("git ls-files", shell=True)
+    all_files = std_out_str.decode('utf8').split('\n')
+    windows_incompatible_files = [file for file in all_files if re.compile(r'.*[:<>"\|\?\*\\].*').match(file)]
+    if windows_incompatible_files:
+        err_str = 'found files incompatible with windows naming scheme: {}'.format(windows_incompatible_files)
+        raise ConsistencyException(err_str)
 
 
 def _get_string_from_file(
@@ -104,3 +115,4 @@ def assert_flask_app_names_correct() -> None:
 
 if __name__ == '__main__':
     assert_flask_app_names_correct()
+    assert_all_files_windows_compatible()
