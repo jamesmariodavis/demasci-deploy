@@ -13,7 +13,6 @@ class TestGoogleSheets(BaseTestCase):
             self.a_col: [1, 2],
             self.b_col: [3, 4],
         })
-        return super().setUp()
 
     def test_get_empty_figure(self) -> None:
         returned_value = PlotlyHelpers.get_emtpy_figure()

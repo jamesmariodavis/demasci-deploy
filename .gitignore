@@ -7,4 +7,7 @@
 google_key.json
 
 # ignore temporary working files
-plotly_figure.html
+local_files/**
+
+# ignore all files in cache
+cache/**
