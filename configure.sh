@@ -60,4 +60,4 @@ FLASK_APP_TIMEOUT=0
 ##########################
 
 # use to include/exclude CBC: https://github.com/coin-or/Cbc
-INCLUDE_CBC=true
+INCLUDE_CBC=false

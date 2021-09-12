@@ -27,7 +27,7 @@ COPY poetry.lock ${BUILD_PATH}/poetry.lock
 RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python - &&\
     poetry install --no-dev
 
-FROM python:3.8-alpine
+FROM python:3.8-slim-bullseye
 # copy coin-or binaries and add to path
 COPY --from=base-builder /coin-or /coin-or
 ENV PATH="${PATH}:/coin-or/bin"\
@@ -40,15 +40,12 @@ COPY --from=base-builder /usr/local/lib/python3.8 /usr/local/lib/python3.8
 
 # install minimal dependencies for convenience
 # blas, lapack referenced by scientific computing (numpy)
-RUN apk update &&\
-    apk add \
-    g++ \
+RUN apt-get update &&\
+    apt-get -y install \
     make \
     curl \
-    blas \
-    lapack \
-    bash &&\
-    pip install --upgrade pip
+    liblapack-dev \
+    bash
 
 # allow statements and log messages to immediately appear in the Knative logs in server
 ENV PYTHONUNBUFFERED=True

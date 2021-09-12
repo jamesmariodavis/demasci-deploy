@@ -1,6 +1,7 @@
 from typing import (
     List,
     Any,
+    Dict,
 )
 from enum import Enum
 from googleapiclient.discovery import build
@@ -42,17 +43,104 @@ def _get_sheet_name_and_range(
     return sheet_name_and_range
 
 
+class GoogleSheetsValuesUpdater:
+    def __init__(self, spreadsheet_id: str) -> None:
+        self.spreadsheet_id = spreadsheet_id
+        self.data: List[Dict[str, Any]] = []
+        self.sheet = _get_sheet_service()
+
+    def execute(self) -> None:
+        body = {
+            'valueInputOption': ValueInputOption.RAW.value,
+            'data': self.data,
+        }
+        _ = self.sheet.values().batchUpdate(
+            spreadsheetId=self.spreadsheet_id,
+            body=body,
+        ).execute()
+
+    def add_data(
+        self,
+        sheet_name: str,
+        cell_range: str,
+        values: List[List[Any]],
+    ) -> None:
+        sheet_name_and_cell_range = _get_sheet_name_and_range(
+            sheet_name=sheet_name,
+            cell_range=cell_range,
+        )
+        update_range = {
+            'values': values,
+            'range': sheet_name_and_cell_range,
+            'majorDimension': MajorDimension.ROWS.value,
+        }
+        self.data.append(update_range)
+
+
+class GoogleSheetsValuesClear:
+    def __init__(self, spreadsheet_id: str) -> None:
+        self.spreadsheet_id = spreadsheet_id
+        self.range_names: List[str] = []
+        self.sheet = _get_sheet_service()
+
+    def execute(self) -> None:
+        body = {'ranges': self.range_names}
+        _ = self.sheet.values().batchClear(
+            spreadsheetId=self.spreadsheet_id,
+            body=body,
+        ).execute()
+
+    def add_clear_cell_data(
+        self,
+        sheet_name: str,
+        cell_range: str,
+    ) -> None:
+        sheet_name_and_range = _get_sheet_name_and_range(
+            sheet_name=sheet_name,
+            cell_range=cell_range,
+        )
+        self.range_names.append(sheet_name_and_range)
+
+
+class GoogleSheetsValuesGetter:
+    def __init__(self, spreadsheet_id: str) -> None:
+        self.spreadsheet_id = spreadsheet_id
+        self.range_names: List[str] = []
+        self.sheet = _get_sheet_service()
+
+    def execute(self) -> List[List[Any]]:
+        result = self.sheet.values().batchGet(
+            spreadsheetId=self.spreadsheet_id,
+            ranges=self.range_names,
+            majorDimension=MajorDimension.ROWS.value,
+        ).execute()
+        ranges = result.get('valueRanges', [])
+        values = [i.get('values', []) for i in ranges]
+        return values
+
+    def add_range(
+        self,
+        sheet_name: str,
+        cell_range: str,
+    ) -> None:
+        sheet_name_and_range = _get_sheet_name_and_range(
+            sheet_name=sheet_name,
+            cell_range=cell_range,
+        )
+        self.range_names.append(sheet_name_and_range)
+
+
 class GoogleSheetsService:
     @staticmethod
-    def get_sheets_values_clear(spreadsheet_id: str):
+    def get_sheets_values_clear(spreadsheet_id: str) -> GoogleSheetsValuesClear:
         return GoogleSheetsValuesClear(spreadsheet_id=spreadsheet_id)
 
     @staticmethod
-    def get_sheets_values_updater(spreadsheet_id: str):
+    def get_sheets_values_updater(spreadsheet_id: str) -> GoogleSheetsValuesUpdater:
         return GoogleSheetsValuesUpdater(spreadsheet_id=spreadsheet_id)
 
     @staticmethod
-    def get_sheets_values_getter(spreadsheet_id: str):
+    def get_sheets_values_getter(spreadsheet_id: str) -> GoogleSheetsValuesGetter:
         return GoogleSheetsValuesGetter(spreadsheet_id=spreadsheet_id)
 
     @staticmethod
@@ -92,90 +180,3 @@ class GoogleSheetsService:
             cell_range='',
         )
         sheets_values_updater.execute()
-
-
-class GoogleSheetsValuesUpdater:
-    def __init__(self, spreadsheet_id: str) -> None:
-        self.spreadsheet_id = spreadsheet_id
-        self.data = []
-        self.sheet = _get_sheet_service()
-
-    def execute(self) -> None:
-        body = {
-            'valueInputOption': ValueInputOption.RAW.value,
-            'data': self.data,
-        }
-        _ = self.sheet.values().batchUpdate(
-            spreadsheetId=self.spreadsheet_id,
-            body=body,
-        ).execute()
-
-    def add_data(
-        self,
-        sheet_name: str,
-        cell_range: str,
-        values: List[List[Any]],
-    ) -> None:
-        sheet_name_and_cell_range = _get_sheet_name_and_range(
-            sheet_name=sheet_name,
-            cell_range=cell_range,
-        )
-        update_range = {
-            'values': values,
-            'range': sheet_name_and_cell_range,
-            'majorDimension': MajorDimension.ROWS.value,
-        }
-        self.data.append(update_range)
-
-
-class GoogleSheetsValuesClear:
-    def __init__(self, spreadsheet_id: str) -> None:
-        self.spreadsheet_id = spreadsheet_id
-        self.ranges = []
-        self.sheet = _get_sheet_service()
-
-    def execute(self) -> None:
-        body = {'ranges': self.ranges}
-        _ = self.sheet.values().batchClear(
-            spreadsheetId=self.spreadsheet_id,
-            body=body,
-        ).execute()
-
-    def add_clear_cell_data(
-        self,
-        sheet_name: str,
-        cell_range: str,
-    ) -> None:
-        sheet_name_and_range = _get_sheet_name_and_range(
-            sheet_name=sheet_name,
-            cell_range=cell_range,
-        )
-        self.ranges.append(sheet_name_and_range)
-
-
-class GoogleSheetsValuesGetter:
-    def __init__(self, spreadsheet_id: str) -> None:
-        self.spreadsheet_id = spreadsheet_id
-        self.range_names = []
-        self.sheet = _get_sheet_service()
-
-    def execute(self) -> None:
-        result = self.sheet.values().batchGet(
-            spreadsheetId=self.spreadsheet_id,
-            ranges=self.range_names,
-            majorDimension=MajorDimension.ROWS.value,
-        ).execute()
-        ranges = result.get('valueRanges', [])
-        values = [i.get('values', []) for i in ranges]
-        return values
-
-    def add_range(
-        self,
-        sheet_name: str,
-        cell_range: str,
-    ) -> None:
-        sheet_name_and_range = _get_sheet_name_and_range(
-            sheet_name=sheet_name,
-            cell_range=cell_range,
-        )
-        self.range_names.append(sheet_name_and_range)

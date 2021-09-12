@@ -16,12 +16,12 @@ WORKDIR ${BUILD_PATH}
 # install dependencies, including docker
 # see "socket solution": https://jpetazzo.github.io/2015/09/03/do-not-use-docker-in-docker-for-ci/
 # musl-dev, linux-headers, g++ required for numpy installation
-RUN apk update &&\
-    apk add \
+RUN apt-get update &&\
+    apt-get -y install \
     git \
     docker \
     musl-dev \
-    linux-headers \
+    linux-headers-generic \
     g++ &&\
     pip install --upgrade pip
 

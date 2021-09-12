@@ -2,28 +2,28 @@
 # builds packages requiring long compile times
 # freeze numpy version to ensure it does not require updating
 # freeze pandas version to ensure it does not require updating
-FROM python:3.8-alpine
+FROM python:3.8-slim-bullseye
 
 # build path is used to install dependencies in image
 ENV BUILD_PATH=/build
 WORKDIR ${BUILD_PATH}
 
 # install dependencies of build
-RUN apk update && \
-    apk add \
-    pkgconfig \
+RUN apt-get update && \
+    apt-get -y upgrade && \
+    apt-get -y install \
+    pkg-config \
     gcc \
     g++ \
     gfortran \
-    blas \
-    lapack \
+    liblapack-dev \
     patch \
     bash \
     make \
     git \
     curl \
     musl-dev \
-    linux-headers \
+    linux-headers-generic \
     && pip install --upgrade pip
 
 # build coin-or binaries
