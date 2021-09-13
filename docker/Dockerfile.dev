@@ -13,17 +13,31 @@ ENV IS_DEV true
 ENV BUILD_PATH=/build
 WORKDIR ${BUILD_PATH}
 
-# install dependencies, including docker
-# see "socket solution": https://jpetazzo.github.io/2015/09/03/do-not-use-docker-in-docker-for-ci/
-# musl-dev, linux-headers, g++ required for numpy installation
+# install dependencies
 RUN apt-get update &&\
     apt-get -y install \
     git \
-    docker \
-    musl-dev \
-    linux-headers-generic \
-    g++ &&\
+    make &&\
     pip install --upgrade pip
+
+# install docker
+# see "socket solution": https://jpetazzo.github.io/2015/09/03/do-not-use-docker-in-docker-for-ci/
+RUN apt-get update &&\
+    apt-get -y install \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    gnupg \
+    lsb-release &&\
+    curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg &&\
+    echo \
+    "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian \
+    $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null &&\
+    apt-get update &&\
+    apt-get -y install \
+    docker-ce \
+    docker-ce-cli \
+    containerd.io
 
 # install gcloud and add to path
 RUN	curl -sSL https://sdk.cloud.google.com > gcl &&\

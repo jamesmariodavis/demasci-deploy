@@ -1,9 +1,18 @@
 # syntax=docker/dockerfile:1.3
 
-ARG BASE_BUILDER_IMAGE_NAME_ARG
-FROM ${BASE_BUILDER_IMAGE_NAME_ARG} as base-builder
+FROM python:3.8-slim-bullseye as base-builder
 
-# re-install poetry for any updated packages
+# build path is used to install dependencies in image
+ENV BUILD_PATH=/build
+WORKDIR ${BUILD_PATH}
+
+# install dependencies of build
+RUN apt-get update && \
+    apt-get -y upgrade && \
+    apt-get -y install \
+    liblapack-dev \
+    curl
+
 # poetry stuff
 ENV PYTHONUNBUFFERED=1 \
     POETRY_VERSION=1.1.6 \
@@ -23,29 +32,28 @@ ENV PATH="${PATH}:/root/.local/bin"\
 COPY pyproject.toml ${BUILD_PATH}/pyproject.toml
 COPY poetry.lock ${BUILD_PATH}/poetry.lock
 
-# Install Poetry, python, and libraries - respects $POETRY_VERSION & $POETRY_HOME
+# install poetry, python, and libraries - respects $POETRY_VERSION & $POETRY_HOME
+# must install ray with extras via pip
 RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python - &&\
+    pip install --upgrade pip &&\
     poetry install --no-dev
 
+# build base image
 FROM python:3.8-slim-bullseye
-# copy coin-or binaries and add to path
-COPY --from=base-builder /coin-or /coin-or
-ENV PATH="${PATH}:/coin-or/bin"\
-    PATH="${PATH}:/coin-or/lib" \
-    LD_LIBRARY_PATH=/coin-or/lib
 
 # copy python and libraries
 COPY --from=base-builder /usr/local/bin /usr/local/bin
 COPY --from=base-builder /usr/local/lib/python3.8 /usr/local/lib/python3.8
 
 # install minimal dependencies for convenience
-# blas, lapack referenced by scientific computing (numpy)
+# liblapack-dev referenced by scientific computing (numpy)
 RUN apt-get update &&\
     apt-get -y install \
     make \
     curl \
     liblapack-dev \
-    bash
+    bash \
+    redis-server
 
 # allow statements and log messages to immediately appear in the Knative logs in server
 ENV PYTHONUNBUFFERED=True

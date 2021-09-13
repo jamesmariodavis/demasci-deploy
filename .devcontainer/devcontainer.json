@@ -3,6 +3,13 @@
 // For advanced configuration, see https://code.visualstudio.com/docs/remote/containers-advanced
 {
 	"image": "${localWorkspaceFolderBasename}-dev:latest",
+	"forwardPorts": [
+		5000, // flask app
+		8265, // ray dashboard
+	],
+	"mounts": [
+		"source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind,consistency=cached"
+	],
 	"containerEnv": {
 		"PYTHONPATH": "/app"
 	},
@@ -29,7 +36,6 @@
 		"ms-azuretools.vscode-docker",
 	],
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	// "forwardPorts": [],
 	// Use 'postCreateCommand' to run commands after the container is created.
 	// "postCreateCommand": "pip3 install --user -r requirements.txt",
 	// Use 'runArgs' to customize docker run command.

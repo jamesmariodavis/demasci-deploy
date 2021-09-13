@@ -89,8 +89,20 @@ gcloud-deploy:
     docker push gcr.io/${GCLOUD_PROJECT_ID}/${PROD_IMAGE_NAME} &&\
 	gcloud run deploy ${GCLOUD_SERVICE_NAME} ${GCLOUD_ALLOW_UNAUTHENTICATED_PARAM} --image=gcr.io/${GCLOUD_PROJECT_ID}/${PROD_IMAGE_NAME}
 
-.PHONY: gcloud-curl
-gcloud-curl:
-	printf '\n' &&\
-	curl --header "Authorization: Bearer ${GCLOUD_IDENTITY_TOKEN}" ${GCLOUD_APP_URL} &&\
-	printf '\n\n'
+#######
+# Ray #
+#######
+
+.PHONY: ray-start
+ray-start:
+	ray start \
+      --head \
+      --port=6379 \
+      --object-manager-port=8076 \
+      --include-dashboard=true \
+      --dashboard-host=0.0.0.0 \
+      --dashboard-port=8265
+
+.PHONY: ray-stop
+ray-stop:
+	ray stop

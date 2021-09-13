@@ -23,7 +23,7 @@ Create a file called `google_key.json` with the credentials for the associated s
 
 Build all containers on local system (this can take several minutes on first run):
 ```
-bash scripts.sh --build-all
+bash scripts.sh --build
 ```
 Enter dev container:
 ```

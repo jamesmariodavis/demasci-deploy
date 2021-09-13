@@ -19,19 +19,17 @@ The following build args are used (copied from `scripts.sh`):
     --build-arg GCLOUD_APP_URL_ARG=${GCLOUD_APP_URL} \
     --build-arg PROD_IMAGE_NAME_ARG=${PROD_IMAGE_NAME} \
     --build-arg BASE_IMAGE_NAME_ARG=${BASE_IMAGE_NAME} \
-    --build-arg BASE_BUILDER_IMAGE_NAME_ARG=${BASE_BUILDER_IMAGE_NAME} \
 ```
 
-There are 4 names images:
-- `base-builder`: Contains tools to build all code from source. Code with significant compile times (CBC, numpy, pandas) are built here. Takes significant time (~20 min) ti build. Build infrequently.
-- `base`: Copies binaries from `base-builder`. Builds or updates additional, faster building, components. Sets environment variables required in production.
+There are 3 named images and 4 total stages. The stages are:
+- `base-builder`: Defined in base Dockerfile. Installs tools to build python libraries and installs required python libraries.
+- `base`: Copies binaries from `base-builder`. Sets environment variables required in production.
 - `prod`: Intended for remote deployment. All code is copied to `DOCKER_CODE_MOUNT_DIRECTORY_ARG`. Contains all required packages, binaries, and environment variables. Satisfies [Google Cloud Run contract](https://cloud.google.com/run/docs/reference/container-contract).
 - `dev`: Intended for local development. Specifically designed to work with VSCode. Contains additional development tools (docker, gcloud). Contains requirements to build additional binaries. Significantly larger in size than `prod`.
 
 The images form a tree with leaf nodes `prod` and `dev`. The images must be built in order:
 ```
-|-- base-builder
-    |-- base
-        |-- prod
-        |-- dev
+|-- base
+    |-- prod
+    |-- dev
 ```
