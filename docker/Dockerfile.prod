@@ -12,6 +12,7 @@ ENV IS_DEV false
 # copy code and set work directory
 # note that code is copied to image in prod
 # changes to code after build will not affect copied code
+# APP_HOME is expected by gunicorn
 ENV APP_HOME=${DOCKER_CODE_MOUNT_DIRECTORY_ARG}
 WORKDIR ${APP_HOME}
 ENV PYTHONPATH=${APP_HOME}

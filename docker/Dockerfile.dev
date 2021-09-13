@@ -24,10 +24,13 @@ RUN apt-get update &&\
 # see "socket solution": https://jpetazzo.github.io/2015/09/03/do-not-use-docker-in-docker-for-ci/
 RUN apt-get update &&\
     apt-get -y install \
+    --no-install-recommends \
+    --no-install-suggests \
     apt-transport-https \
     ca-certificates \
     curl \
     gnupg \
+    # lsb-release installs python3 in /usr/bin
     lsb-release &&\
     curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg &&\
     echo \
@@ -46,23 +49,12 @@ RUN	curl -sSL https://sdk.cloud.google.com > gcl &&\
     --disable-prompts
 ENV PATH="$PATH:/gcloud/google-cloud-sdk/bin"
 
-# set references to use docker and gcloud in container
-ARG GCLOUD_REGION_ARG
-ARG GCLOUD_PROJECT_ID_ARG
-ARG PROD_IMAGE_NAME_ARG
-ARG GCLOUD_SERVICE_NAME_ARG
-ARG GCLOUD_ALLOW_UNAUTHENTICATED_PARAM_ARG
-ARG GCLOUD_SERVICE_ACCOUNT_ARG
-ARG GCLOUD_APP_URL_ARG
-ENV PROD_IMAGE_NAME=${PROD_IMAGE_NAME_ARG}\
-    GCLOUD_PROJECT_ID=${GCLOUD_PROJECT_ID_ARG} \
-    GCLOUD_REGION=${GCLOUD_REGION_ARG} \
-    GCLOUD_SERVICE_NAME=${GCLOUD_SERVICE_NAME_ARG}\
-    GCLOUD_ALLOW_UNAUTHENTICATED_PARAM=${GCLOUD_ALLOW_UNAUTHENTICATED_PARAM_ARG}\
-    GCLOUD_APP_URL=${GCLOUD_APP_URL_ARG} \
-    GCLOUD_SERVICE_ACCOUNT=${GCLOUD_SERVICE_ACCOUNT_ARG}
 
 # configure gcloud
+ARG GCLOUD_REGION_ARG
+ARG GCLOUD_PROJECT_ID_ARG
+ENV GCLOUD_PROJECT_ID=${GCLOUD_PROJECT_ID_ARG} \
+    GCLOUD_REGION=${GCLOUD_REGION_ARG}
 RUN gcloud config set run/region ${GCLOUD_REGION} &&\
     gcloud config set project ${GCLOUD_PROJECT_ID} &&\
     gcloud auth configure-docker

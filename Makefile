@@ -1,3 +1,8 @@
+#!make
+
+# load configuration variables
+include configure.sh
+
 ABSOLUTE_PATH=$(abspath .)
 GCLOUD_IDENTITY_TOKEN=$(shell gcloud auth print-identity-token)
 PYTEST_FAIL_UNDER_COVERAGE=50

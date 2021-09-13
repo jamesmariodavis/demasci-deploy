@@ -1,6 +1,26 @@
+#!/bin/bash
 ######################################################
 # Note: rebuild dev image after configuration update #
 ######################################################
+
+####################
+# basic repo setup #
+####################
+
+# retreive repo name from git fetch location
+GIT_FETCH_LOCATION=$(git remote show -n origin | grep Fetch | cut -d: -f2-)
+INFERED_REPO_NAME=$(echo "${GIT_FETCH_LOCATION}" | sed -E "s/.*\/(.*).git/\1/")
+
+# set image names relative to git repo name
+# images are built in a tree
+# to get prod image (base -> prod)
+# to get dev image (base -> dev)
+BASE_IMAGE_NAME=${INFERED_REPO_NAME}-base:latest
+DEV_IMAGE_NAME=${INFERED_REPO_NAME}-dev:latest
+PROD_IMAGE_NAME=${INFERED_REPO_NAME}-prod:latest
+
+# set code mount direcotry when entering docker containers
+DOCKER_CODE_MOUNT_DIRECTORY=/app
 
 ######################
 # gcloud identifiers #
@@ -50,3 +70,9 @@ FLASK_APP_THREADS=8
 
 # timeout is set to 0 to disable the timeouts of the workers to allow Google Cloud Run to handle instance scaling
 FLASK_APP_TIMEOUT=0
+
+###################
+# setup ray #
+###################
+
+RAY_DASHBOARD_PORT=8265

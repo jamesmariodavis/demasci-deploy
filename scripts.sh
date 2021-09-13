@@ -8,39 +8,18 @@ source configure.sh
 ABSOLUTE_PATH=$(pwd)
 PARENT_DIR="$(basename ${ABSOLUTE_PATH})"
 
-# retreive repo name from git fetch location
-GIT_FETCH_LOCATION=$(git remote show -n origin | grep Fetch | cut -d: -f2-)
-INFERED_REPO_NAME=$(echo "${GIT_FETCH_LOCATION}" | sed -E "s/.*\/(.*).git/\1/")
-
-# set image names relative to git repo name
-# images are built in a tree
-# to get prod image (base -> prod)
-# to get dev image (base -> dev)
-BASE_IMAGE_NAME=${INFERED_REPO_NAME}-base:latest
-DEV_IMAGE_NAME=${INFERED_REPO_NAME}-dev:latest
-PROD_IMAGE_NAME=${INFERED_REPO_NAME}-prod:latest
-
-# set code mount direcotry when entering docker containers
-DOCKER_CODE_MOUNT_DIRECTORY=/app
-
 # all builds use the same args
 DOCKER_BUILD_WITH_ARGS="docker build \
+    --build-arg DOCKER_CODE_MOUNT_DIRECTORY_ARG=${DOCKER_CODE_MOUNT_DIRECTORY} \
+    --build-arg BASE_IMAGE_NAME_ARG=${BASE_IMAGE_NAME} \
     --build-arg FLASK_APP_MODULE_LOCATION_ARG=${FLASK_APP_MODULE_LOCATION} \
     --build-arg FLASK_APP_NAME_IN_CODE_ARG=${FLASK_APP_NAME_IN_CODE} \
     --build-arg FLASK_APP_PORT_ARG=${FLASK_APP_PORT} \
     --build-arg FLASK_APP_WORKERS_ARG=${FLASK_APP_WORKERS} \
     --build-arg FLASK_APP_THREADS_ARG=${FLASK_APP_THREADS} \
     --build-arg FLASK_APP_TIMEOUT_ARG=${FLASK_APP_TIMEOUT} \
-    --build-arg DOCKER_CODE_MOUNT_DIRECTORY_ARG=${DOCKER_CODE_MOUNT_DIRECTORY} \
-    --build-arg INCLUDE_CBC=${INCLUDE_CBC} \
     --build-arg GCLOUD_PROJECT_ID_ARG=${GCLOUD_PROJECT_ID} \
     --build-arg GCLOUD_REGION_ARG=${GCLOUD_REGION} \
-    --build-arg GCLOUD_SERVICE_NAME_ARG=${GCLOUD_SERVICE_NAME} \
-    --build-arg GCLOUD_ALLOW_UNAUTHENTICATED_PARAM_ARG=${GCLOUD_ALLOW_UNAUTHENTICATED_PARAM} \
-    --build-arg GCLOUD_SERVICE_ACCOUNT_ARG=${GCLOUD_SERVICE_ACCOUNT} \
-    --build-arg GCLOUD_APP_URL_ARG=${GCLOUD_APP_URL} \
-    --build-arg PROD_IMAGE_NAME_ARG=${PROD_IMAGE_NAME} \
-    --build-arg BASE_IMAGE_NAME_ARG=${BASE_IMAGE_NAME} \
     "
 
 function build_image_base() {
@@ -93,12 +72,12 @@ elif [ "$1" = "--enter-dev" ]; then
     --rm \
     --entrypoint="" \
     --env PORT=${FLASK_APP_PORT} \
-    --workdir=/app \
+    --workdir=${DOCKER_CODE_MOUNT_DIRECTORY} \
     --env PYTHONPATH=${DOCKER_CODE_MOUNT_DIRECTORY} \
     --volume ${ABSOLUTE_PATH}:${DOCKER_CODE_MOUNT_DIRECTORY} \
-    --volume /var/run/docker.sock:/var/run/docker.sock \
+    --volume /var/run/docker.sock:/var/run/docker.sock \    # mount docker socket
     --publish ${FLASK_APP_PORT}:${FLASK_APP_PORT} \
-    --publish 8265:8265 \
+    --publish ${RAY_DASHBOARD_PORT}:${RAY_DASHBOARD_PORT} \
     --name="${INFERED_REPO_NAME}-dev-bash" \
     ${DEV_IMAGE_NAME} \
     /bin/bash

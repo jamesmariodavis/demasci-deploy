@@ -1,7 +1,9 @@
 # tests that repo conforms to expectations
+from typing import List
 import os
 import re
 import subprocess
+import json5
 from app_lib.app_paths import ROOT_DIR
 
 
@@ -11,6 +13,11 @@ class ConsistencyException(Exception):
 
 CONFIGURE_FILE_PATH = os.path.join(ROOT_DIR, 'configure.sh')
 GITIGNORE_FILE_PATH = os.path.join(ROOT_DIR, '.gitignore')
+DEVCONTAINER_JSON_FILE_PATH = os.path.join(ROOT_DIR, '.devcontainer', 'devcontainer.json')
+POETRY_TOML_FILE_PATH = os.path.join(ROOT_DIR, 'pyproject.toml')
+DOCKERFILE_BASE_FILE_PATH = os.path.join(ROOT_DIR, 'docker', 'Dockerfile.base')
+DOCKERFILE_DEV_FILE_PATH = os.path.join(ROOT_DIR, 'docker', 'Dockerfile.dev')
+DOCKERFILE_PROD_FILE_PATH = os.path.join(ROOT_DIR, 'docker', 'Dockerfile.prod')
 
 
 def assert_all_files_windows_compatible() -> None:
@@ -23,32 +30,34 @@ def assert_all_files_windows_compatible() -> None:
 
 
 def _get_string_from_file(
-    match_object: re.Pattern,  # type: ignore
-    file_path: str,
-) -> str:
+        match_object: re.Pattern,  # type: ignore
+        file_path: str,
+        expect_unique_match: bool = True) -> List[str]:
     with open(file_path, 'rt', encoding='utf-8') as f:
         lines = f.readlines()
     target_lines = [match_object.match(i) for i in lines]
-    target_lines = [i for i in target_lines if i]
-    if len(target_lines) != 1:
+    non_null_target_lines = [i for i in target_lines if i is not None]
+    if not non_null_target_lines:
+        err_str = 'found no matchs for {} in {}'.format(
+            match_object,
+            file_path,
+        )
+        raise ConsistencyException(err_str)
+    try:
+        target_strings = [i.group(1) for i in non_null_target_lines]
+    except IndexError as e:
+        err_str = 'extracting group(1) failed on {} using regex {}'.format(
+            non_null_target_lines,
+            match_object,
+        )
+        raise ConsistencyException(err_str) from e
+    if (len(target_strings) != 1) and expect_unique_match:
         err_str = 'did not find unique match for {} in {}'.format(
             match_object.pattern,
             file_path,
         )
         raise ConsistencyException(err_str)
-    unique_match_object = target_lines[0]
-    if unique_match_object is None:
-        err_str = 'expected match object for {} is None'.format(match_object)
-        raise ConsistencyException(err_str)
-    try:
-        target_string = unique_match_object.group(1)
-    except IndexError as e:
-        err_str = 'extracting group(1) failed on {} using regex {}'.format(
-            unique_match_object,
-            match_object,
-        )
-        raise ConsistencyException(err_str) from e
-    return target_string
+    return target_strings
 
 
 def assert_flask_app_names_correct() -> None:
@@ -58,7 +67,8 @@ def assert_flask_app_names_correct() -> None:
         referenced_module_location = _get_string_from_file(
             match_object=flask_app_file_location_re,
             file_path=CONFIGURE_FILE_PATH,
-        )
+            expect_unique_match=True,
+        )[0]
     except ConsistencyException as e:
         err_str = '{} does not have proper flask app configuration. expected unique match for {}'.format(
             CONFIGURE_FILE_PATH,
@@ -82,7 +92,8 @@ def assert_flask_app_names_correct() -> None:
         referenced_flask_app_name = _get_string_from_file(
             match_object=docker_flask_app_name_re,
             file_path=CONFIGURE_FILE_PATH,
-        )
+            expect_unique_match=True,
+        )[0]
     except ConsistencyException as e:
         err_str = '{} does not have proper flask app configuration. expected unique match for {}'.format(
             CONFIGURE_FILE_PATH,
@@ -96,7 +107,8 @@ def assert_flask_app_names_correct() -> None:
         actual_flask_app_name = _get_string_from_file(
             match_object=python_flask_app_name_re,
             file_path=infered_python_file_path,
-        )
+            expect_unique_match=True,
+        )[0]
     except ConsistencyException as e:
         err_str = '{} does not have proper flask app configuration. expected unique match for {}'.format(
             infered_python_file_path,
@@ -113,6 +125,81 @@ def assert_flask_app_names_correct() -> None:
         raise ConsistencyException(err_str)
 
 
+def assert_port_values_consistent() -> None:
+    with open(DEVCONTAINER_JSON_FILE_PATH, 'r', encoding='utf8') as f:
+        devcontainer_json = json5.load(f)
+    forward_ports = devcontainer_json['forwardPorts']
+
+    ray_dashboard_port_match_object = re.compile(r'^RAY_DASHBOARD_PORT[ ]*=[ ]*(.*)')
+    flask_app_port_match_object = re.compile(r'^FLASK_APP_PORT[ ]*=[ ]*(.*)')
+
+    ray_dashboard_port = _get_string_from_file(
+        match_object=ray_dashboard_port_match_object,
+        file_path=CONFIGURE_FILE_PATH,
+        expect_unique_match=True,
+    )[0]
+    flask_app_port = _get_string_from_file(
+        match_object=flask_app_port_match_object,
+        file_path=CONFIGURE_FILE_PATH,
+        expect_unique_match=True,
+    )[0]
+    if not ray_dashboard_port:
+        err_str = 'could not find ray dashboard port in {}'.format(CONFIGURE_FILE_PATH)
+        raise ConsistencyException(err_str)
+
+    if not flask_app_port:
+        err_str = 'could not find flask app port in {}'.format(CONFIGURE_FILE_PATH)
+        raise ConsistencyException(err_str)
+
+    if int(ray_dashboard_port) not in forward_ports:
+        err_str = 'ray dashboard port in {} not present in forward ports in {}'.format(
+            CONFIGURE_FILE_PATH,
+            DEVCONTAINER_JSON_FILE_PATH,
+        )
+        raise ConsistencyException(err_str)
+
+    if int(flask_app_port) not in forward_ports:
+        err_str = 'flask app port in {} not present in forward ports in {}'.format(
+            CONFIGURE_FILE_PATH,
+            DEVCONTAINER_JSON_FILE_PATH,
+        )
+        raise ConsistencyException(err_str)
+
+
+def assert_python_versions_consistent() -> None:
+    dockerfile_file_paths = [DOCKERFILE_BASE_FILE_PATH]
+    dockerfile_python_version_from_statement_re = re.compile(r'^FROM python:([\.0-9]*).*')
+    all_dockerfile_python_versions = []
+    for file_path in dockerfile_file_paths:
+        dockerfile_python_versions = _get_string_from_file(
+            match_object=dockerfile_python_version_from_statement_re,
+            file_path=file_path,
+            expect_unique_match=False,
+        )
+        all_dockerfile_python_versions += dockerfile_python_versions
+    if len(set(all_dockerfile_python_versions)) != 1:
+        err_str = 'found inconsistent python versions referenced in Dockerfiles: {}'.format(
+            all_dockerfile_python_versions)
+        raise ConsistencyException(err_str)
+
+    unique_dockerfile_python_version = all_dockerfile_python_versions[0]
+    poetry_python_version_re = re.compile(r'python[^0-9]*([\.0-9]*)')
+    poetry_python_version = _get_string_from_file(
+        match_object=poetry_python_version_re,
+        file_path=POETRY_TOML_FILE_PATH,
+        expect_unique_match=True,
+    )[0]
+    if poetry_python_version != unique_dockerfile_python_version:
+        err_str = 'python version in Dockerfile = {}. does not match version {} in {}'.format(
+            unique_dockerfile_python_version,
+            poetry_python_version,
+            POETRY_TOML_FILE_PATH,
+        )
+        raise ConsistencyException(err_str)
+
+
 if __name__ == '__main__':
     assert_flask_app_names_correct()
     assert_all_files_windows_compatible()
+    assert_port_values_consistent()
+    assert_python_versions_consistent()
