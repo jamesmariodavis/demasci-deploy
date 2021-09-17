@@ -14,4 +14,4 @@ google_key.json
 local_files/**
 
 # ignore all files in cache
-cache/**
+# cache/**

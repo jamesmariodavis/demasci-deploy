@@ -2,9 +2,11 @@
 Dockerfile.*
 scripts.*
 README.md
-.DS_Store
 .devcontainer
+
+# ignore errant tools configs
 .idea
+.DS_Store
 
 # ignore procedurally generated cache
 .mypy_cache
