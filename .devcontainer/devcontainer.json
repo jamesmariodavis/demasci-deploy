@@ -10,7 +10,7 @@
 	],
 	"mounts": [
 		"source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind,consistency=cached",
-		"source=${env:HOME}/.kube,target=/root/.kube,type=bind,consistency=cached",
+		"source=${env:HOME}${env:USERPROFILE}/.kube,target=/root/.kube,type=bind,consistency=cached",
 	],
 	"containerEnv": {
 		"PYTHONPATH": "/app",
