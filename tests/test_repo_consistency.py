@@ -11,13 +11,16 @@ class ConsistencyException(Exception):
     pass
 
 
+RESERVED_PORTS = (
+    8001,  # k8s dashboard
+    5001,  # k8s uvicorn port defined in k8s/uvicorn.yml
+)
+
 CONFIGURE_FILE_PATH = os.path.join(ROOT_DIR, 'configure.sh')
 GITIGNORE_FILE_PATH = os.path.join(ROOT_DIR, '.gitignore')
 DEVCONTAINER_JSON_FILE_PATH = os.path.join(ROOT_DIR, '.devcontainer', 'devcontainer.json')
 POETRY_TOML_FILE_PATH = os.path.join(ROOT_DIR, 'pyproject.toml')
-DOCKERFILE_BASE_FILE_PATH = os.path.join(ROOT_DIR, 'docker', 'Dockerfile.base')
-DOCKERFILE_DEV_FILE_PATH = os.path.join(ROOT_DIR, 'docker', 'Dockerfile.dev')
-DOCKERFILE_PROD_FILE_PATH = os.path.join(ROOT_DIR, 'docker', 'Dockerfile.prod')
+DOCKERFILE_FILE_PATH = os.path.join(ROOT_DIR, 'docker', 'Dockerfile')
 
 
 def assert_all_files_windows_compatible() -> None:
@@ -61,8 +64,8 @@ def _get_string_from_file(
 
 
 def assert_flask_app_names_correct() -> None:
-    # retreive referenced module for flask server
-    flask_app_file_location_re = re.compile(r'^FLASK_APP_MODULE_LOCATION[]*=[]*(.*)')
+    # retreive referenced module for api server
+    flask_app_file_location_re = re.compile(r'^API_MODULE_LOCATION[]*=[]*(.*)')
     try:
         referenced_module_location = _get_string_from_file(
             match_object=flask_app_file_location_re,
@@ -86,8 +89,8 @@ def assert_flask_app_names_correct() -> None:
         )
         raise ConsistencyException(err_str)
 
-    # retreive referenced flask app name
-    docker_flask_app_name_re = re.compile(r'^FLASK_APP_NAME_IN_CODE[ ]*=[ ]*(.*)')
+    # retreive referenced api app name
+    docker_flask_app_name_re = re.compile(r'^API_APP_NAME_IN_CODE[ ]*=[ ]*(.*)')
     try:
         referenced_flask_app_name = _get_string_from_file(
             match_object=docker_flask_app_name_re,
@@ -101,8 +104,8 @@ def assert_flask_app_names_correct() -> None:
         )
         raise ConsistencyException(err_str) from e
 
-    # retreive actual flask app name
-    python_flask_app_name_re = re.compile(r'(.*) = Flask\(__name__\).*')
+    # retreive actual api app name
+    python_flask_app_name_re = re.compile(r'(.*) = FastAPI\(\).*')
     try:
         actual_flask_app_name = _get_string_from_file(
             match_object=python_flask_app_name_re,
@@ -129,17 +132,18 @@ def assert_port_values_consistent() -> None:
     with open(DEVCONTAINER_JSON_FILE_PATH, 'r', encoding='utf8') as f:
         devcontainer_json = json5.load(f)
     forward_ports = devcontainer_json['forwardPorts']
+    vscode_injected_port_env_var = int(devcontainer_json['containerEnv']['PORT'])
 
     ray_dashboard_port_match_object = re.compile(r'^RAY_DASHBOARD_PORT[ ]*=[ ]*(.*)')
-    flask_app_port_match_object = re.compile(r'^FLASK_APP_PORT[ ]*=[ ]*(.*)')
+    api_test_port_match_object = re.compile(r'^API_TEST_PORT[ ]*=[ ]*(.*)')
 
     ray_dashboard_port = _get_string_from_file(
         match_object=ray_dashboard_port_match_object,
         file_path=CONFIGURE_FILE_PATH,
         expect_unique_match=True,
     )[0]
-    flask_app_port = _get_string_from_file(
-        match_object=flask_app_port_match_object,
+    api_test_port = _get_string_from_file(
+        match_object=api_test_port_match_object,
         file_path=CONFIGURE_FILE_PATH,
         expect_unique_match=True,
     )[0]
@@ -147,8 +151,8 @@ def assert_port_values_consistent() -> None:
         err_str = 'could not find ray dashboard port in {}'.format(CONFIGURE_FILE_PATH)
         raise ConsistencyException(err_str)
 
-    if not flask_app_port:
-        err_str = 'could not find flask app port in {}'.format(CONFIGURE_FILE_PATH)
+    if not api_test_port:
+        err_str = 'could not find api test port in {}'.format(CONFIGURE_FILE_PATH)
         raise ConsistencyException(err_str)
 
     if int(ray_dashboard_port) not in forward_ports:
@@ -158,25 +162,32 @@ def assert_port_values_consistent() -> None:
         )
         raise ConsistencyException(err_str)
 
-    if int(flask_app_port) not in forward_ports:
-        err_str = 'flask app port in {} not present in forward ports in {}'.format(
+    if int(api_test_port) not in forward_ports:
+        err_str = 'api test port in {} not present in forward ports in {}'.format(
             CONFIGURE_FILE_PATH,
             DEVCONTAINER_JSON_FILE_PATH,
         )
         raise ConsistencyException(err_str)
 
+    if int(api_test_port) != vscode_injected_port_env_var:
+        err_str = 'api test port = {}. vscode injected port name = {}. must match'.format(
+            api_test_port,
+            vscode_injected_port_env_var,
+        )
+        raise ConsistencyException(err_str)
+
+    if set(RESERVED_PORTS).issubset(forward_ports):
+        err_str = 'forwarding reserved port. reserved ports: {}'.format(RESERVED_PORTS)
+        raise ConsistencyException(err_str)
+
 
 def assert_python_versions_consistent() -> None:
-    dockerfile_file_paths = [DOCKERFILE_BASE_FILE_PATH]
     dockerfile_python_version_from_statement_re = re.compile(r'^FROM python:([\.0-9]*).*')
-    all_dockerfile_python_versions = []
-    for file_path in dockerfile_file_paths:
-        dockerfile_python_versions = _get_string_from_file(
-            match_object=dockerfile_python_version_from_statement_re,
-            file_path=file_path,
-            expect_unique_match=False,
-        )
-        all_dockerfile_python_versions += dockerfile_python_versions
+    all_dockerfile_python_versions = _get_string_from_file(
+        match_object=dockerfile_python_version_from_statement_re,
+        file_path=DOCKERFILE_FILE_PATH,
+        expect_unique_match=False,
+    )
     if len(set(all_dockerfile_python_versions)) != 1:
         err_str = 'found inconsistent python versions referenced in Dockerfiles: {}'.format(
             all_dockerfile_python_versions)

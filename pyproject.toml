@@ -12,8 +12,6 @@ markers=[
 # https://python-poetry.org/docs/dependency-specification/
 [tool.poetry.dependencies]
 python = ">=3.9, <3.10"
-Flask = "^2.0.1"
-gunicorn = "^20.1.0"
 google-api-python-client = "^2.19.1"
 Jinja2 = "^3.0.1"
 numpy = "^1.21.2"
@@ -25,6 +23,8 @@ ray = {extras = ["default"], version = "^1.6.0"}
 # required for ray dashboard and not included in ray
 colorama = "^0.4.4" # installed
 json5 = "^0.9.6"
+fastapi = "^0.68.1"
+uvicorn = "^0.15.0"
 
 [tool.poetry.dev-dependencies]
 yapf = "^0.31.0"

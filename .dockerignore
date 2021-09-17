@@ -2,9 +2,9 @@
 Dockerfile.*
 scripts.*
 README.md
-.git
 .DS_Store
 .devcontainer
+.idea
 
 # ignore procedurally generated cache
 .mypy_cache

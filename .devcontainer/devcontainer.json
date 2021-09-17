@@ -5,14 +5,16 @@
 	"image": "${localWorkspaceFolderBasename}-dev:latest",
 	"remoteUser": "root",
 	"forwardPorts": [
-		5000, // flask app
+		5000, // api test port
 		8265, // ray dashboard
 	],
 	"mounts": [
-		"source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind,consistency=cached"
+		"source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind,consistency=cached",
+		"source=${env:HOME}/.kube,target=/root/.kube,type=bind,consistency=cached",
 	],
 	"containerEnv": {
-		"PYTHONPATH": "/app"
+		"PYTHONPATH": "/app",
+		"PORT": "5000",
 	},
 	"workspaceMount": "source=${localWorkspaceFolder},target=/app,type=bind,consistency=delegated",
 	"workspaceFolder": "/app",

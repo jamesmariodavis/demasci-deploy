@@ -3,9 +3,7 @@
 # load configuration variables
 include configure.sh
 
-ABSOLUTE_PATH=$(abspath .)
 GCLOUD_IDENTITY_TOKEN=$(shell gcloud auth print-identity-token)
-PYTEST_FAIL_UNDER_COVERAGE=50
 
 #########
 # Tests #
@@ -49,32 +47,14 @@ test-local: test-consistency test-mypy test-pylint test-pytest-local
 .PHONY: test
 test: test-consistency test-mypy test-pylint test-pytest
 
-#####################
-# Flask Development #
-#####################
+###################
+# API Development #
+###################
 
 # references env variables defined in Dockerfile
-.PHONY: flask-server-dev
-flask-server-dev:
-	export FLASK_APP=${FLASK_APP_MODULE_LOCATION} &&\
-	export FLASK_ENV=development &&\
-	flask run --host=0.0.0.0
-
-# references env variables defined in Dockerfile
-.PHONY: flask-server
-flask-server:
-	export FLASK_APP=${FLASK_APP_MODULE_LOCATION} &&\
-	flask run --host=0.0.0.0
-
-# references env variables defined in Dockerfile
-.PHONY: gunicorn-server
-gunicorn-server:
-	gunicorn \
-	--bind ":${PORT}" \
-	--workers ${FLASK_APP_WORKERS} \
-	--threads ${FLASK_APP_THREADS} \
-	--timeout ${FLASK_APP_TIMEOUT} \
-	"${FLASK_APP_MODULE_LOCATION}:${FLASK_APP_NAME_IN_CODE}"
+.PHONY: run-test-server
+run-test-server:
+	bash docker/prod.sh
 
 ##############
 # Deployment #
@@ -90,9 +70,20 @@ gcloud-auth:
 
 .PHONY: gcloud-deploy
 gcloud-deploy:
-	docker tag ${PROD_IMAGE_NAME} gcr.io/${GCLOUD_PROJECT_ID}/${PROD_IMAGE_NAME} &&\
-    docker push gcr.io/${GCLOUD_PROJECT_ID}/${PROD_IMAGE_NAME} &&\
-	gcloud run deploy ${GCLOUD_SERVICE_NAME} ${GCLOUD_ALLOW_UNAUTHENTICATED_PARAM} --image=gcr.io/${GCLOUD_PROJECT_ID}/${PROD_IMAGE_NAME}
+	docker tag ${PROD_IMAGE_NAME} gcr.io/${GCLOUD_PROJECT_ID}/${PROD_IMAGE_NAME} \
+    && docker push gcr.io/${GCLOUD_PROJECT_ID}/${PROD_IMAGE_NAME} \
+	&& gcloud run deploy ${GCLOUD_SERVICE_NAME} ${GCLOUD_ALLOW_UNAUTHENTICATED_PARAM} --image=gcr.io/${GCLOUD_PROJECT_ID}/${PROD_IMAGE_NAME}
+
+##############
+# Kubernetes #
+##############
+
+.PHONY: k8s-local-deploy
+k8s-local-deploy:
+	kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v${K8S_DASHBOARD_VERSION}/aio/deploy/recommended.yaml \
+	&& kubectl patch deployment kubernetes-dashboard -n kubernetes-dashboard --type 'json' -p '[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--enable-skip-login"}]' \
+	&& kubectl apply -f k8s/uvicorn.yml
+
 
 #######
 # Ray #

@@ -3,6 +3,10 @@
 .pytest_cache
 .coverage
 
+# ignore errant tool configs
+.idea
+.DS_Store
+
 # ignore secrets
 google_key.json
 

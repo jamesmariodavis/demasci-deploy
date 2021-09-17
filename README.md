@@ -90,6 +90,13 @@ wsl git clone https://github.com/jamesmariodavis/python_base.git
 ```
 Similarly for other commands prefixing `wsl` may be required.
 
+## Note on OSX
+The initilization scripts may reference the `realpath` executable.
+To install this on OSX:
+```
+brew install coreutils
+```
+
 **Do not edit any files in Windows**.
 Instead, [open VSCode in a container](#vscode) and edit files there.
 Editing files in Windows will change the carriage return charachter and [break the codebase](https://en.wikipedia.org/wiki/Newline#Issues_with_different_newline_formats).
