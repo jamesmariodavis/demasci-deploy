@@ -97,6 +97,10 @@ ARG GCLOUD_REGION_ARG
 ARG GCLOUD_PROJECT_ID_ARG
 # used to set PORT env variable
 ARG FLASK_APP_PORT_ARG
+# where code will be mounted in docker container
+ARG DOCKER_CODE_MOUNT_DIRECTORY_ARG
+# location of service account key file
+ARG GCLOUD_SERVICE_ACCOUNT_KEY_FILE_ARG
 
 # install additional dependencies
 RUN apt-get update \
@@ -143,7 +147,7 @@ RUN gcloud config set run/region ${GCLOUD_REGION_ARG} &&\
 
 # set credentials path for gcloud
 # https://cloud.google.com/docs/authentication/production#auth-cloud-implicit-python
-ENV GOOGLE_APPLICATION_CREDENTIALS=${DOCKER_CODE_MOUNT_DIRECTORY_ARG}/google_key.json
+ENV GOOGLE_APPLICATION_CREDENTIALS=${DOCKER_CODE_MOUNT_DIRECTORY_ARG}/${GCLOUD_SERVICE_ACCOUNT_KEY_FILE_ARG}
 
 # PORT is part of the container contract in Cloud Run
 # https://cloud.google.com/run/docs/reference/container-contract

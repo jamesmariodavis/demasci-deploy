@@ -27,6 +27,9 @@ PYTEST_FAIL_UNDER_COVERAGE=50
 # gcloud identifiers #
 ######################
 
+# credentials for service account
+GCLOUD_SERVICE_ACCOUNT_KEY_FILE='google_key.json'
+
 # project ID can be found on project page in gcp UI
 GCLOUD_PROJECT_ID=python-base-325119
 

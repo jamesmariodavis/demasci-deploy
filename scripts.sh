@@ -11,6 +11,7 @@ DOCKER_BUILD_WITH_ARGS="docker build \
     --build-arg FLASK_APP_PORT_ARG=${FLASK_APP_PORT} \
     --build-arg GCLOUD_PROJECT_ID_ARG=${GCLOUD_PROJECT_ID} \
     --build-arg GCLOUD_REGION_ARG=${GCLOUD_REGION} \
+    --build-arg GCLOUD_SERVICE_ACCOUNT_KEY_FILE_ARG=${GCLOUD_SERVICE_ACCOUNT_KEY_FILE} \
     "
 
 function build_image_base() {
