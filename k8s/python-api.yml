@@ -2,23 +2,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: uvicorn-deployment
+  name: python-api-deployment
   labels:
-    app: uvicorn
+    app: python-api
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: uvicorn
+      app: python-api
   template:
     metadata:
       labels:
-        app: uvicorn
+        app: python-api
     spec:
       containers:
-        - name: uvicorn
-          image: python_base-prod:latest
-          imagePullPolicy: Never
+        - name: python-api
+          image: gcr.io/python-base-325119/python-app-prod:latest
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 5001
           env:
@@ -29,12 +29,12 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: uvicorn-service
+  name: python-api-service
 spec:
   ports:
   - port: 5001
     protocol: TCP
     targetPort: 5001
   selector:
-    app: uvicorn
+    app: python-api
   type: LoadBalancer

@@ -44,11 +44,13 @@ if [ "$1" = "--help" ]; then
     printf "%-${PadSpace}s enters production container and starts interactive bash shell\n" "--enter-prod"
     printf "%-${PadSpace}s starts production container to simulate deployment\n" "--run-prod"
 elif [ "$1" = "--build" ]; then
-    build_image_prod \
+    build_image_base \
+    && build_image_prod \
     && build_image_dev \
     && docker image prune --force
 elif [ "$1" = "--build-prod" ]; then
     build_image_base \
+    && build_image_prod \
     && docker image prune --force
 elif [ "$1" = "--clean-docker" ]; then
     docker system prune $2

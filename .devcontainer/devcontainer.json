@@ -2,7 +2,7 @@
 // https://github.com/microsoft/vscode-dev-containers/tree/v0.187.0/containers/python-3
 // For advanced configuration, see https://code.visualstudio.com/docs/remote/containers-advanced
 {
-	"image": "${localWorkspaceFolderBasename}-dev:latest",
+	"image": "python-app-dev:latest",
 	"remoteUser": "root",
 	"forwardPorts": [
 		5000, // api test port
