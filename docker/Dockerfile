@@ -106,6 +106,7 @@ ARG GCLOUD_SERVICE_ACCOUNT_KEY_FILE_ARG
 RUN apt-get update \
     && apt-get -y install \
     git \
+    jq \
     && apt-get clean \
     && rm -rf /var/cache/apt/lists
 

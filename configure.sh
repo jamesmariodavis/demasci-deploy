@@ -7,11 +7,6 @@
 # basic repo setup #
 ####################
 
-# retreive repo name from git fetch location
-# can be used for project name
-GIT_FETCH_LOCATION=$(git remote show -n origin | grep Fetch | cut -d: -f2-)
-INFERED_REPO_NAME=$(echo "${GIT_FETCH_LOCATION}" | sed -E "s/.*\/(.*).git/\1/")
-
 # set project name. must be coordinated with devcontainer.json
 PROJECT_NAME='python-app'
 
@@ -31,18 +26,9 @@ PYTEST_FAIL_UNDER_COVERAGE=50
 # gcloud identifiers #
 ######################
 
-# project ID can be found on project page in gcp UI
-GCLOUD_PROJECT_ID=python-base-325119
-
 # choose nearby region https://cloud.google.com/compute/docs/regions-zones
 GCLOUD_REGION=us-west1
 GCLOUD_ZONE=us-west1-a
-
-# service account must be created in web console
-GCLOUD_SERVICE_ACCOUNT="admin-171@python-base-325119.iam.gserviceaccount.com"
-
-# prod image name will create local tag and remote tag
-GCLOUD_PROD_IMAGE_NAME=gcr.io/${GCLOUD_PROJECT_ID}/${PROD_IMAGE_NAME}
 
 # credentials for service account
 # refer to README
@@ -53,11 +39,6 @@ GCLOUD_SERVICE_NAME=python-app
 
 # cluster name affects name of resource in k8s
 GCLOUD_K8S_CLUSTER_NAME=python-app
-
-# context is relevant for any command related to kubectl
-# to see all contexts use `kubectl config get-contexts`
-# gcloud generates name procedurally
-GCLOUD_K8S_CONTEXT_NAME="gke_${GCLOUD_PROJECT_ID}_${GCLOUD_ZONE}_${GCLOUD_K8S_CLUSTER_NAME}"
 
 # parameter passed to toggle if app is public
 # from https://cloud.google.com/sdk/gcloud/reference/run/deploy :

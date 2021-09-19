@@ -3,7 +3,37 @@
 # load configuration variables
 include configure.sh
 
+# script fails if GOOGLE_APPLICATION_CREDENTIALS not defined
+ifndef GOOGLE_APPLICATION_CREDENTIALS
+$(error GOOGLE_APPLICATION_CREDENTIALS env var not defined. Possibly running prod image.)
+endif
+
+# check if GOOGLE_APPLICATION_CREDENTIALS referenced file exist
+# script fails if file does not exist
+# create example in these cases
+ifeq ("$(wildcard ${GOOGLE_APPLICATION_CREDENTIALS})","")
+$(info ${GOOGLE_APPLICATION_CREDENTIALS} does not exist. Possibly running prod image. Creating placeholder ...)
+msg=$(shell python google_key_example_gen.py)
+$(info ${msg})
+endif
+
+# gcloud auth depends on service account
+# service account must be created in web console
+# parse service acount credentials to gather semi-private information
+GCLOUD_PROJECT_ID=$(shell cat ${GOOGLE_APPLICATION_CREDENTIALS} | jq '.project_id')
+GCLOUD_SERVICE_ACCOUNT=$(shell cat ${GOOGLE_APPLICATION_CREDENTIALS} | jq '.client_email')
+
+# gcloud prod image name will create locally tagged image
+# image will be uploaded to gcr.io remote
+GCLOUD_PROD_IMAGE_NAME=gcr.io/${GCLOUD_PROJECT_ID}/${PROD_IMAGE_NAME}
+
+# context is relevant for any command related to kubectl
+# to see all contexts use `kubectl config get-contexts`
+# gcloud generates name procedurally
+GCLOUD_K8S_CONTEXT_NAME="gke_${GCLOUD_PROJECT_ID}_${GCLOUD_ZONE}_${GCLOUD_K8S_CLUSTER_NAME}"
+
 GCLOUD_IDENTITY_TOKEN=$(shell gcloud auth print-identity-token)
+
 
 #########
 # Tests #
@@ -63,6 +93,10 @@ run-test-server:
 .PHONY: build-prod
 build-prod:
 	bash scripts.sh --build-prod
+
+.PHONY: gcloud-example-key
+gcloud-example-key:
+	python google_key_example_gen.py
 
 .PHONY: gcloud-auth
 gcloud-auth:
