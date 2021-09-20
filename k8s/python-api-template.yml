@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: python-api
-          image: gcr.io/python-base-325119/python-app-prod:latest
+          image: {{GCLOUD_PROD_IMAGE_NAME}}
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 5001

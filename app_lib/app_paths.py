@@ -9,6 +9,7 @@ LIB_DIR = os.path.join(ROOT_DIR, 'app_lib')
 TEMPLATE_DIR = os.path.join(ROOT_DIR, 'templates')
 LOCAL_CACHE_DIR = os.path.join(ROOT_DIR, 'cache')
 LOCAL_FILE_DIR = os.path.join(ROOT_DIR, 'local_files')
+K8S_DIR = os.path.join(ROOT_DIR, 'k8s')
 
 # testing related
 TEST_DIR = os.path.join(ROOT_DIR, 'tests')

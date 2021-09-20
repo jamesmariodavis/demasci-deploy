@@ -28,9 +28,6 @@ K8S_APP_YML_FILE_PATH = os.path.join(ROOT_DIR, 'k8s', 'python-api.yml')
 with open(DEVCONTAINER_JSON_FILE_PATH, 'r', encoding='utf8') as devcontainer_file:
     DEVCONTAINER_JSON = json5.load(devcontainer_file)
 
-# k8s yaml is not a true yaml because it specifies multiple resources
-K8S_YAML_LIST = FileParsingHelpers.get_k8s_yaml_list(file_path=K8S_APP_YML_FILE_PATH)
-
 
 def assert_all_files_windows_compatible() -> None:
     std_out_str = subprocess.check_output("git ls-files", shell=True)
@@ -46,24 +43,11 @@ def assert_containers_coordinate() -> None:
     std_out_str = subprocess.check_output(terminal_command, shell=True)
     dev_image_name = std_out_str.decode('utf8').split('\n', maxsplit=1)[0]
 
-    terminal_command = 'make --no-print-directory get-gcloud-prod-image-name'
-    std_out_str = subprocess.check_output(terminal_command, shell=True)
-    gcloud_prod_image_name = std_out_str.decode('utf8').split('\n', maxsplit=1)[0]
-
     vscode_dev_image_ref = DEVCONTAINER_JSON['image']
     if dev_image_name != vscode_dev_image_ref:
         err_str = 'dev image name: {} vscode referenced image does not match: {}'.format(
             dev_image_name,
             vscode_dev_image_ref,
-        )
-        raise ConsistencyException(err_str)
-
-    k8s_api_deploy_yml = K8S_YAML_LIST[0]
-    k8s_image_ref = k8s_api_deploy_yml['spec']['template']['spec']['containers'][0]['image']
-    if gcloud_prod_image_name != k8s_image_ref:
-        err_str = 'gcloud prod image: {} k8s referenced image does not match: {}'.format(
-            gcloud_prod_image_name,
-            k8s_image_ref,
         )
         raise ConsistencyException(err_str)
 
