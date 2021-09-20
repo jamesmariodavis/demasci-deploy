@@ -11,7 +11,7 @@
 google_key.json
 
 # ignore temporary working files
-local_files/**
+# local_files/**
 
 # ignore all files in cache
 cache/**
