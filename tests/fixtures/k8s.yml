@@ -1,0 +1,15 @@
+---
+apiVersion: apps/v1
+spec:
+  selector:
+    matchLabels:
+      app: python-api
+  
+---
+apiVersion: v1
+spec:
+  ports:
+  - port: 5001
+    protocol: TCP
+    targetPort: 5001
+    

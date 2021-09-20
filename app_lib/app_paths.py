@@ -10,6 +10,10 @@ TEMPLATE_DIR = os.path.join(ROOT_DIR, 'templates')
 LOCAL_CACHE_DIR = os.path.join(ROOT_DIR, 'cache')
 LOCAL_FILE_DIR = os.path.join(ROOT_DIR, 'local_files')
 
+# testing related
+TEST_DIR = os.path.join(ROOT_DIR, 'tests')
+TEST_FIXTURE_DIR = os.path.join(TEST_DIR, 'fixtures')
+
 # check that this file exists according to the logic above
 if not os.path.exists(os.path.join(LIB_DIR, 'app_paths.py')):
     raise Exception()

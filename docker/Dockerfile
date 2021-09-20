@@ -94,9 +94,8 @@ FROM base-image as dev-image
 
 # used to configure gcloud in dev image
 ARG GCLOUD_REGION_ARG
-ARG GCLOUD_PROJECT_ID_ARG
 # used to set PORT env variable
-ARG FLASK_APP_PORT_ARG
+ARG API_TEST_PORT_ARG
 # where code will be mounted in docker container
 ARG DOCKER_CODE_MOUNT_DIRECTORY_ARG
 # location of service account key file
@@ -143,7 +142,6 @@ RUN	curl -sSL https://sdk.cloud.google.com > gcl \
     --disable-prompts
 ENV PATH="${PATH}:/gcloud/google-cloud-sdk/bin"
 RUN gcloud config set run/region ${GCLOUD_REGION_ARG} &&\
-    gcloud config set project ${GCLOUD_PROJECT_ID_ARG} &&\
     gcloud auth configure-docker
 
 # set credentials path for gcloud
@@ -153,7 +151,7 @@ ENV GOOGLE_APPLICATION_CREDENTIALS=${DOCKER_CODE_MOUNT_DIRECTORY_ARG}/${GCLOUD_S
 # PORT is part of the container contract in Cloud Run
 # https://cloud.google.com/run/docs/reference/container-contract
 # simulate PORT contract with static reference in dev
-ENV PORT=${FLASK_APP_PORT_ARG}
+ENV PORT=${API_TEST_PORT}
 
 # install k8s
 RUN command apt-get update \

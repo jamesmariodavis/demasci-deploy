@@ -20,8 +20,8 @@ endif
 # gcloud auth depends on service account
 # service account must be created in web console
 # parse service acount credentials to gather semi-private information
-GCLOUD_PROJECT_ID=$(shell cat ${GOOGLE_APPLICATION_CREDENTIALS} | jq '.project_id')
-GCLOUD_SERVICE_ACCOUNT=$(shell cat ${GOOGLE_APPLICATION_CREDENTIALS} | jq '.client_email')
+GCLOUD_PROJECT_ID=$(shell cat ${GOOGLE_APPLICATION_CREDENTIALS} | jq --raw-output '.project_id')
+GCLOUD_SERVICE_ACCOUNT=$(shell cat ${GOOGLE_APPLICATION_CREDENTIALS} | jq --raw-output '.client_email')
 
 # gcloud prod image name will create locally tagged image
 # image will be uploaded to gcr.io remote
@@ -34,6 +34,12 @@ GCLOUD_K8S_CONTEXT_NAME="gke_${GCLOUD_PROJECT_ID}_${GCLOUD_ZONE}_${GCLOUD_K8S_CL
 
 GCLOUD_IDENTITY_TOKEN=$(shell gcloud auth print-identity-token)
 
+######################
+# Consistency Checks #
+######################
+.PHONY: get-gcloud-prod-image-name
+get-gcloud-prod-image-name:
+	$(info ${GCLOUD_PROD_IMAGE_NAME})
 
 #########
 # Tests #
@@ -100,7 +106,8 @@ gcloud-example-key:
 
 .PHONY: gcloud-auth
 gcloud-auth:
-	gcloud auth activate-service-account ${GCLOUD_SERVICE_ACCOUNT} --key-file="google_key.json"
+	gcloud config set project ${GCLOUD_PROJECT_ID} \
+	&& gcloud auth activate-service-account ${GCLOUD_SERVICE_ACCOUNT} --key-file="google_key.json"
 
 .PHONY: gcloud-push-image
 gcloud-push-image: test build-prod

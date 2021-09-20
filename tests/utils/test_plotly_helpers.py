@@ -5,7 +5,7 @@ from tests.base_test_case import BaseTestCase
 from app_lib.utils.plotly_helpers import PlotlyHelpers
 
 
-class TestGoogleSheets(BaseTestCase):
+class TestPlotlyHelpers(BaseTestCase):
     def setUp(self) -> None:
         self.a_col = 'a'
         self.b_col = 'b'

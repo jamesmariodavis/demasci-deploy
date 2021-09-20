@@ -5,7 +5,7 @@ from app_lib.utils.jinja_render import JinjaRender
 from app_lib.utils.plotly_helpers import PlotlyHelpers
 
 
-class TestGoogleSheets(BaseTestCase):
+class TestJinjaRender(BaseTestCase):
     def setUp(self) -> None:
         self.a_col = 'a'
         self.b_col = 'b'

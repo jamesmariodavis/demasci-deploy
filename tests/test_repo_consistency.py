@@ -1,10 +1,10 @@
 # tests that repo conforms to expectations
-from typing import List
 import os
 import re
 import subprocess
 import json5
 from app_lib.app_paths import ROOT_DIR
+from app_lib import FileParsingHelpers
 
 
 class ConsistencyException(Exception):
@@ -17,6 +17,7 @@ RESERVED_PORTS = (
 )
 
 CONFIGURE_FILE_PATH = os.path.join(ROOT_DIR, 'configure.sh')
+MAKEFILE_FILE_PATH = os.path.join(ROOT_DIR, 'Makefile')
 GITIGNORE_FILE_PATH = os.path.join(ROOT_DIR, '.gitignore')
 DOCKERIGNORE_FILE_PATH = os.path.join(ROOT_DIR, '.dockerignore')
 DEVCONTAINER_JSON_FILE_PATH = os.path.join(ROOT_DIR, '.devcontainer', 'devcontainer.json')
@@ -26,6 +27,9 @@ K8S_APP_YML_FILE_PATH = os.path.join(ROOT_DIR, 'k8s', 'python-api.yml')
 
 with open(DEVCONTAINER_JSON_FILE_PATH, 'r', encoding='utf8') as devcontainer_file:
     DEVCONTAINER_JSON = json5.load(devcontainer_file)
+
+# k8s yaml is not a true yaml because it specifies multiple resources
+K8S_YAML_LIST = FileParsingHelpers.get_k8s_yaml_list(file_path=K8S_APP_YML_FILE_PATH)
 
 
 def assert_all_files_windows_compatible() -> None:
@@ -37,43 +41,12 @@ def assert_all_files_windows_compatible() -> None:
         raise ConsistencyException(err_str)
 
 
-def _get_string_from_file(
-        match_object: re.Pattern,  # type: ignore
-        file_path: str,
-        expect_unique_match: bool = True) -> List[str]:
-    with open(file_path, 'rt', encoding='utf-8') as f:
-        lines = f.readlines()
-    target_lines = [match_object.match(i) for i in lines]
-    non_null_target_lines = [i for i in target_lines if i is not None]
-    if not non_null_target_lines:
-        err_str = 'found no matchs for {} in {}'.format(
-            match_object,
-            file_path,
-        )
-        raise ConsistencyException(err_str)
-    try:
-        target_strings = [i.group(1) for i in non_null_target_lines]
-    except IndexError as e:
-        err_str = 'extracting group(1) failed on {} using regex {}'.format(
-            non_null_target_lines,
-            match_object,
-        )
-        raise ConsistencyException(err_str) from e
-    if (len(target_strings) != 1) and expect_unique_match:
-        err_str = 'did not find unique match for {} in {}'.format(
-            match_object.pattern,
-            file_path,
-        )
-        raise ConsistencyException(err_str)
-    return target_strings
-
-
 def assert_containers_coordinate() -> None:
     terminal_command = '. {} && echo $DEV_IMAGE_NAME'.format(CONFIGURE_FILE_PATH)
     std_out_str = subprocess.check_output(terminal_command, shell=True)
     dev_image_name = std_out_str.decode('utf8').split('\n', maxsplit=1)[0]
 
-    terminal_command = '. {} && echo $GCLOUD_PROD_IMAGE_NAME'.format(CONFIGURE_FILE_PATH)
+    terminal_command = 'make --no-print-directory get-gcloud-prod-image-name'
     std_out_str = subprocess.check_output(terminal_command, shell=True)
     gcloud_prod_image_name = std_out_str.decode('utf8').split('\n', maxsplit=1)[0]
 
@@ -85,14 +58,8 @@ def assert_containers_coordinate() -> None:
         )
         raise ConsistencyException(err_str)
 
-    # k8s yaml is not a true yaml because it specifies multiple resources
-    # parse using re
-    k8s_image_ref_re = re.compile(r'^[ ]*image:[ ]*(.*)[ ]*')
-    k8s_image_ref = _get_string_from_file(
-        match_object=k8s_image_ref_re,
-        file_path=K8S_APP_YML_FILE_PATH,
-        expect_unique_match=True,
-    )[0]
+    k8s_api_deploy_yml = K8S_YAML_LIST[0]
+    k8s_image_ref = k8s_api_deploy_yml['spec']['template']['spec']['containers'][0]['image']
     if gcloud_prod_image_name != k8s_image_ref:
         err_str = 'gcloud prod image: {} k8s referenced image does not match: {}'.format(
             gcloud_prod_image_name,
@@ -105,7 +72,7 @@ def assert_app_api_names_correct() -> None:
     # retreive referenced module for api server
     configured_api_module_name_re = re.compile(r'^API_MODULE_LOCATION[]*=[]*(.*)')
     try:
-        configured_api_module_name = _get_string_from_file(
+        configured_api_module_name = FileParsingHelpers.get_pattern_matches_from_file(
             match_object=configured_api_module_name_re,
             file_path=CONFIGURE_FILE_PATH,
             expect_unique_match=True,
@@ -130,7 +97,7 @@ def assert_app_api_names_correct() -> None:
     # retreive referenced api app name
     configured_api_app_name_re = re.compile(r'^API_APP_NAME_IN_CODE[ ]*=[ ]*(.*)')
     try:
-        configured_api_app_name = _get_string_from_file(
+        configured_api_app_name = FileParsingHelpers.get_pattern_matches_from_file(
             match_object=configured_api_app_name_re,
             file_path=CONFIGURE_FILE_PATH,
             expect_unique_match=True,
@@ -145,7 +112,7 @@ def assert_app_api_names_correct() -> None:
     # retreive actual api app name
     python_api_app_name_re = re.compile(r'(.*) = FastAPI\(\).*')
     try:
-        python_api_app_name = _get_string_from_file(
+        python_api_app_name = FileParsingHelpers.get_pattern_matches_from_file(
             match_object=python_api_app_name_re,
             file_path=infered_python_file_path,
             expect_unique_match=True,
@@ -173,12 +140,12 @@ def assert_port_values_consistent() -> None:
     ray_dashboard_port_re = re.compile(r'^RAY_DASHBOARD_PORT[ ]*=[ ]*(.*)')
     api_test_port_re = re.compile(r'^API_TEST_PORT[ ]*=[ ]*(.*)')
 
-    ray_dashboard_port = _get_string_from_file(
+    ray_dashboard_port = FileParsingHelpers.get_pattern_matches_from_file(
         match_object=ray_dashboard_port_re,
         file_path=CONFIGURE_FILE_PATH,
         expect_unique_match=True,
     )[0]
-    api_test_port = _get_string_from_file(
+    api_test_port = FileParsingHelpers.get_pattern_matches_from_file(
         match_object=api_test_port_re,
         file_path=CONFIGURE_FILE_PATH,
         expect_unique_match=True,
@@ -219,7 +186,7 @@ def assert_port_values_consistent() -> None:
 
 def assert_python_versions_consistent() -> None:
     dockerfile_python_version_from_statement_re = re.compile(r'^FROM python:([\.0-9]*).*')
-    all_dockerfile_python_versions = _get_string_from_file(
+    all_dockerfile_python_versions = FileParsingHelpers.get_pattern_matches_from_file(
         match_object=dockerfile_python_version_from_statement_re,
         file_path=DOCKERFILE_FILE_PATH,
         expect_unique_match=False,
@@ -231,7 +198,7 @@ def assert_python_versions_consistent() -> None:
 
     unique_dockerfile_python_version = all_dockerfile_python_versions[0]
     poetry_python_version_re = re.compile(r'python[^0-9]*([\.0-9]*)')
-    poetry_python_version = _get_string_from_file(
+    poetry_python_version = FileParsingHelpers.get_pattern_matches_from_file(
         match_object=poetry_python_version_re,
         file_path=POETRY_TOML_FILE_PATH,
         expect_unique_match=True,
@@ -247,7 +214,7 @@ def assert_python_versions_consistent() -> None:
 
 def assert_secrets_ignored() -> None:
     gcloud_secret_file_re = re.compile(r'^GCLOUD_SERVICE_ACCOUNT_KEY_FILE[ ]*=[ ]*(.*)')
-    gcloud_secret_file_name = _get_string_from_file(
+    gcloud_secret_file_name = FileParsingHelpers.get_pattern_matches_from_file(
         match_object=gcloud_secret_file_re,
         file_path=CONFIGURE_FILE_PATH,
         expect_unique_match=True,
@@ -259,12 +226,12 @@ def assert_secrets_ignored() -> None:
     match_string = '^{}([ ]*)'.format(gcloud_secret_file_name)
     gcloud_secret_in_ignore_match_object = re.compile(match_string)
     # just check that there is a unique match
-    _ = _get_string_from_file(
+    _ = FileParsingHelpers.get_pattern_matches_from_file(
         match_object=gcloud_secret_in_ignore_match_object,
         file_path=GITIGNORE_FILE_PATH,
         expect_unique_match=True,
     )
-    _ = _get_string_from_file(
+    _ = FileParsingHelpers.get_pattern_matches_from_file(
         match_object=gcloud_secret_in_ignore_match_object,
         file_path=DOCKERIGNORE_FILE_PATH,
         expect_unique_match=True,

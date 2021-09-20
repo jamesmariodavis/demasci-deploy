@@ -8,7 +8,8 @@
 ####################
 
 # set project name. must be coordinated with devcontainer.json
-PROJECT_NAME='python-app'
+# do not use quoted strings
+PROJECT_NAME=python-app
 
 # set image names relative to git repo name
 # images are built in a tree implicit in docker/Dockerfile

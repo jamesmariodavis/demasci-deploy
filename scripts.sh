@@ -8,8 +8,7 @@ RELATIVE_PATH=$(pwd)
 # all builds use the same args
 DOCKER_BUILD_WITH_ARGS="docker build \
     --build-arg DOCKER_CODE_MOUNT_DIRECTORY_ARG=${DOCKER_CODE_MOUNT_DIRECTORY} \
-    --build-arg FLASK_APP_PORT_ARG=${FLASK_APP_PORT} \
-    --build-arg GCLOUD_PROJECT_ID_ARG=${GCLOUD_PROJECT_ID} \
+    --build-arg API_TEST_PORT_ARG=${API_TEST_PORT} \
     --build-arg GCLOUD_REGION_ARG=${GCLOUD_REGION} \
     --build-arg GCLOUD_SERVICE_ACCOUNT_KEY_FILE_ARG=${GCLOUD_SERVICE_ACCOUNT_KEY_FILE} \
     "
@@ -66,7 +65,7 @@ elif [ "$1" = "--enter-dev" ]; then
     --volume ~/.kube:/root/.kube \
     --publish ${API_TEST_PORT}:${API_TEST_PORT} \
     --publish ${RAY_DASHBOARD_PORT}:${RAY_DASHBOARD_PORT} \
-    --name="${INFERED_REPO_NAME}-dev-bash" \
+    --name="${PROJECT_NAME}-dev-bash" \
     ${DEV_IMAGE_NAME} \
     /bin/bash
 elif [ "$1" = "--enter-prod" ]; then
@@ -82,7 +81,7 @@ elif [ "$1" = "--enter-prod" ]; then
     --entrypoint="" \
     --workdir=${DOCKER_CODE_MOUNT_DIRECTORY} \
     --publish ${API_TEST_PORT}:${API_TEST_PORT} \
-    --name="${INFERED_REPO_NAME}-prod-bash" \
+    --name="${PROJECT_NAME}-prod-bash" \
     ${PROD_IMAGE_NAME} \
     /bin/bash
 elif [ "$1" = "--run" ]; then
@@ -93,7 +92,7 @@ elif [ "$1" = "--run" ]; then
     --rm \
     --env PORT=${API_TEST_PORT} \
     --publish ${API_TEST_PORT}:${API_TEST_PORT} \
-    --name="${INFERED_REPO_NAME}-prod-run" \
+    --name="${PROJECT_NAME}-prod-run" \
     ${PROD_IMAGE_NAME}
 elif [ "$1" = "--k8s-proxy" ]; then
     # creates proxy to k8s cluster making it accsible on local machine
