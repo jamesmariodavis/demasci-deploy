@@ -34,13 +34,6 @@ GCLOUD_K8S_CONTEXT_NAME="gke_${GCLOUD_PROJECT_ID}_${GCLOUD_ZONE}_${GCLOUD_K8S_CL
 
 GCLOUD_IDENTITY_TOKEN=$(shell gcloud auth print-identity-token)
 
-######################
-# Consistency Checks #
-######################
-.PHONY: get-gcloud-prod-image-name
-get-gcloud-prod-image-name:
-	$(info ${GCLOUD_PROD_IMAGE_NAME})
-
 #########
 # Tests #
 #########
@@ -109,10 +102,13 @@ gcloud-auth:
 	gcloud config set project ${GCLOUD_PROJECT_ID} \
 	&& gcloud auth activate-service-account ${GCLOUD_SERVICE_ACCOUNT} --key-file="google_key.json"
 
+.PHONY: gcloud-tag-image
+gcloud-tag-image: test build-prod
+	docker tag ${PROD_IMAGE_NAME} ${GCLOUD_PROD_IMAGE_NAME}
+
 .PHONY: gcloud-push-image
-gcloud-push-image: test build-prod
-	docker tag ${PROD_IMAGE_NAME} ${GCLOUD_PROD_IMAGE_NAME} \
-    && docker push ${GCLOUD_PROD_IMAGE_NAME}
+gcloud-push-image: gcloud-tag-image
+    docker push ${GCLOUD_PROD_IMAGE_NAME}
 
 .PHONY: gcloud-run-deploy
 gcloud-run-deploy: gcloud-push-image
@@ -141,19 +137,24 @@ gcloud-k8s-delete: gcloud-k8s-context
 # Kubernetes #
 ##############
 
+# render k8s tempalte yamls to actual yamls
+.PHONY: k8s-render
+k8s-render:
+	python k8s/k8s_render_template.py --file_name=python-api-template.yml --GCLOUD_PROD_IMAGE_NAME=${GCLOUD_PROD_IMAGE_NAME}
+
 # note this will deploy to current kubectl context
 .PHONY: k8s-deploy
-k8s-deploy:
+k8s-deploy: k8s-render
 	kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v${K8S_DASHBOARD_VERSION}/aio/deploy/recommended.yaml \
 	&& kubectl patch deployment kubernetes-dashboard -n kubernetes-dashboard --type 'json' -p '[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--enable-skip-login"}]' \
-	&& kubectl apply -f k8s/python-api.yml
+	&& kubectl apply -f k8s/python-api-rendered.yml
 
 .PHONY: k8s-local-context
 k8s-local-context:
 	kubectl config use-context ${K8S_LOCAL_CONTEXT_NAME}
 
 .PHONY: k8s-local-deploy
-k8s-local-deploy: gcloud-push-image k8s-local-context k8s-deploy
+k8s-local-deploy: gcloud-tag-image k8s-local-context k8s-deploy
 
 #######
 # Ray #
