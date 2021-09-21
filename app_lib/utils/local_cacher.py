@@ -19,7 +19,7 @@ import pandas as pd
 from app_lib import AppxHash
 
 DEFAULT_USE_CACHE_KWARG = 'use_cache'
-DEFAULT_INVALIDITY_HOURS = 24 * 7
+DEFAULT_CACHE_VALIDITY_HOURS = 24 * 7
 DATETIME_FORMAT_STR = '%Y-%m-%d %H:%M:%S'
 
 TMetaData = TypeVar('TMetaData', bound='MetaData')
@@ -216,7 +216,7 @@ class LocalCacher:
         cache_dir: str,
         unhashable_kwargs: Optional[Collection[Any]] = None,
         use_cache_kwarg: str = DEFAULT_USE_CACHE_KWARG,
-        cache_validity_hours: int = DEFAULT_INVALIDITY_HOURS,
+        cache_validity_hours: int = DEFAULT_CACHE_VALIDITY_HOURS,
     ):
         self.unhashable_kwargs = unhashable_kwargs
         self.use_cache_kwarg = use_cache_kwarg
