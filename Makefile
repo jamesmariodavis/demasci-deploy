@@ -37,6 +37,7 @@ GCLOUD_IDENTITY_TOKEN=$(shell gcloud auth print-identity-token)
 #########
 # Tests #
 #########
+
 .PHONY: test-consistency
 test-consistency:
 	echo 'testing repo consistency ...' &&\
@@ -45,7 +46,7 @@ test-consistency:
 .PHONY: test-mypy
 test-mypy:
 	echo 'running mypy ...' &&\
-	mypy .
+	mypy app_lib tests
 
 .PHONY: test-pylint
 test-pylint:

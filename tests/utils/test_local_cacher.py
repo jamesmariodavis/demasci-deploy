@@ -66,7 +66,7 @@ def cached_g(
 def cached_frame_f(
         x: int,
         use_cache_a_lache: bool = True,  # pylint: disable=unused-argument
-) -> Dict[int, str]:
+) -> pd.DataFrame:
     frame = pd.DataFrame({
         'b': [x] * 2,
         'c': ['a', 'b'],
@@ -84,11 +84,11 @@ class TestLocalCacher(BaseTestCase):
             'z': 4,
         }
         args_list = [
-            [],
-            [1],
-            [1, 'a'],
-            [1, 'a', True],
-            [1, 'a', True, 4],
+            (),
+            (1, ),
+            (1, 'a'),
+            (1, 'a', True),
+            (1, 'a', True, 4),
         ]
         kwargs_list = [
             {
@@ -109,7 +109,7 @@ class TestLocalCacher(BaseTestCase):
         ]
         function_results = [some_f(*args, **kwargs) for args, kwargs in zip(args_list, kwargs_list)]  # type: ignore
         full_kwargs_results = [
-            LocalCacher._get_full_kwargs(func=some_f, passed_args=args, passed_kwargs=kwargs)
+            LocalCacher._get_full_kwargs(func=some_f, passed_args=args, passed_kwargs=kwargs)  # type: ignore
             for args, kwargs in zip(args_list, kwargs_list)
         ]
         # assert all elements are the same
@@ -120,7 +120,7 @@ class TestLocalCacher(BaseTestCase):
     def test_get_call_signature_hash(self) -> None:
         call_signature_hash_1 = LocalCacher._get_call_signature_hash(
             func=some_f,
-            passed_args=[],
+            passed_args=(),
             passed_kwargs={
                 'x': 1,
                 'y': 'a',
@@ -132,7 +132,7 @@ class TestLocalCacher(BaseTestCase):
         )
         call_signature_hash_2 = LocalCacher._get_call_signature_hash(
             func=some_f,
-            passed_args=[1, 'a'],
+            passed_args=(1, 'a'),
             passed_kwargs={
                 CUSTOM_USE_CACHE_KWARG: True,
             },
@@ -142,7 +142,7 @@ class TestLocalCacher(BaseTestCase):
         # test use_cache param value has no impact
         call_signature_hash_3 = LocalCacher._get_call_signature_hash(
             func=some_f,
-            passed_args=[1, 'a'],
+            passed_args=(1, 'a'),
             passed_kwargs={
                 CUSTOM_USE_CACHE_KWARG: False,
             },
@@ -155,7 +155,7 @@ class TestLocalCacher(BaseTestCase):
         # test unhashable_kwargs respected
         call_signature_hash_4 = LocalCacher._get_call_signature_hash(
             func=some_f,
-            passed_args=[],
+            passed_args=(),
             passed_kwargs={
                 'x': 1,
                 'y': 'a',
@@ -168,7 +168,7 @@ class TestLocalCacher(BaseTestCase):
 
         call_signature_hash_5 = LocalCacher._get_call_signature_hash(
             func=some_f,
-            passed_args=[],
+            passed_args=(),
             passed_kwargs={
                 'x': 1,
                 'y': 'a',
@@ -196,6 +196,7 @@ class TestLocalCacher(BaseTestCase):
         cached_g_hash = LocalCacher._get_function_source_hash(func=cached_g)
         self.assertNotEqual(cached_f_hash, cached_g_hash)
 
+    # pylint: disable=too-many-locals
     def test_cache_retreival(self) -> None:
         # can't retreive hash of function or kwargs because decorator returns wrapper
         # use hard coded values instead
@@ -211,7 +212,7 @@ class TestLocalCacher(BaseTestCase):
         target_f_source_hash = LocalCacher._get_function_source_hash(func=cached_f)
         target_kwarg_hash = LocalCacher._get_call_signature_hash(
             func=cached_f,
-            passed_args=[],
+            passed_args=(),
             passed_kwargs=kwargs,
             use_cache_kwarg=CUSTOM_USE_CACHE_KWARG,
             unhashable_kwargs=[],
@@ -329,7 +330,7 @@ class TestLocalCacher(BaseTestCase):
         target_f_source_hash = LocalCacher._get_function_source_hash(func=cached_frame_f)
         target_kwarg_hash = LocalCacher._get_call_signature_hash(
             func=cached_frame_f,
-            passed_args=[],
+            passed_args=(),
             passed_kwargs=kwargs,
             use_cache_kwarg=CUSTOM_USE_CACHE_KWARG,
             unhashable_kwargs=[],

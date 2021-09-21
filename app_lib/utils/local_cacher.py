@@ -16,7 +16,7 @@ import inspect
 import json
 import pickle
 import pandas as pd
-from app_lib import AppxHash
+from app_lib.utils.appx_hash import AppxHash
 
 DEFAULT_USE_CACHE_KWARG = 'use_cache'
 DEFAULT_CACHE_VALIDITY_HOURS = 24 * 7

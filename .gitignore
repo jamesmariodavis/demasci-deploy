@@ -1,11 +1,11 @@
 # ignore procedurally generated cache
-.mypy_cache
-.pytest_cache
-.coverage
+**/.mypy_cache
+**/.pytest_cache
+**/.coverage
 
 # ignore errant tool configs
-.idea
-.DS_Store
+**/.idea
+**/.DS_Store
 
 # ignore secrets
 google_key.json

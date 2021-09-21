@@ -62,7 +62,7 @@ class FloatHashHandler(ObjectHashHandler):
 
     @classmethod
     def get_appx_object_hash(cls, input_object: Any) -> str:
-        if isinstance(input_object, float) or isinstance(input_object, np.floating):
+        if isinstance(input_object, (float, np.floating)):
             hashable_object = np.round(input_object, DIGITS_OF_PRECISION)
         else:
             cls.raise_type_exception(input_object=input_object)
@@ -104,7 +104,7 @@ class CollectionHashHandler(ObjectHashHandler):
         except TypeError:
             # some member of collection may not be hashable
             # convert unhashable objects in collection to hashes
-            hashable_object = tuple([AppxHash.get_appx_hash(i) for i in hashable_object])
+            hashable_object = tuple(AppxHash.get_appx_hash(i) for i in hashable_object)
         return_hash = _hash_function(object_to_hash=(hashable_object, co_hash))
         return return_hash
 
@@ -125,7 +125,7 @@ class DictHashHandler(ObjectHashHandler):
         elif isinstance(input_object, dict):
             hashable_dict = {AppxHash.get_appx_hash(i): AppxHash.get_appx_hash(j) for i, j in input_object.items()}
             # sort dictionary for uniqueness
-            sorted_hashable_tuples = sorted([i for i in hashable_dict.items()])
+            sorted_hashable_tuples = sorted(list(hashable_dict.items()))
             # to distinguish dict from tuple of tuples hash a tuple with identifier
             co_hash = '73'
         else:
