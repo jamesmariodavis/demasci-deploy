@@ -27,8 +27,11 @@ class CellData(Enum):
 
 def _get_sheet_service() -> Any:
     # pylint: disable=no-member
-    service = build('sheets', 'v4')
-    sheet = service.spreadsheets()  # type: ignore
+    try:
+        service = build('sheets', 'v4')
+        sheet = service.spreadsheets()  # type: ignore
+    except Exception:  # pylint: disable=broad-except
+        return None
     return sheet
 
 

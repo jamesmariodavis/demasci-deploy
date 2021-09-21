@@ -51,13 +51,13 @@ The repo name is used to tag Docker images.
 The name of the upstream fetch source in Docker must match the top level directory name locally.
 This impacts coordinating Docker image names in `scripts.sh` and `.devcontainer/devcontainer.json`.
 
-The flask application file path is a required reference when starting the webserver.
-The current file name is `flask_app.py`. 
-The associated reference is `flask_app`.
+The api application file path is a required reference when starting the webserver.
+The current file name is `api.py`. 
+The associated reference is `api`.
 The referneced is present in `configure.sh` as environment variable.
 This and requires manual confguration.
 
-There is a reference to a flask app name in the flask application file (`flask_app.py`).
+There is a reference to a api app name in the api application file (`api.py`).
 Currently it is `app`.
 This name is referenced in `configure.sh` as an environment variable.
 This requires manual configuration.
