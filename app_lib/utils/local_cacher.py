@@ -115,6 +115,16 @@ class MetaData:
         file_path = os.path.join(cache_dir, file_name)
         return file_path
 
+    def delete_meta_data(
+        self,
+        cache_dir: str,
+    ) -> None:
+        meta_data_file_path = self._get_meta_data_file_path(
+            canonical_file_prefix=self.canonical_file_prefix,
+            cache_dir=cache_dir,
+        )
+        os.remove(meta_data_file_path)
+
 
 class ObjectCacheHandler:
     CACHE_HANDLER_NAME = 'Generic'
@@ -168,6 +178,19 @@ class ObjectCacheHandler:
             return_object = pickle.load(file=f)
         return return_object
 
+    @classmethod
+    def delete_cache(
+        cls,
+        meta_data: MetaData,
+        cache_dir: str,
+    ) -> None:
+        file_path = cls.get_file_path(
+            canonical_file_prefix=meta_data.canonical_file_prefix,
+            file_suffix='pkl',
+            cache_dir=cache_dir,
+        )
+        os.remove(file_path)
+
 
 class DataFrameCacheHandler(ObjectCacheHandler):
     CACHE_HANDLER_NAME = 'DataFrame'
@@ -203,6 +226,19 @@ class DataFrameCacheHandler(ObjectCacheHandler):
         )
         frame = pd.read_csv(filepath_or_buffer=file_path)
         return frame
+
+    @classmethod
+    def delete_cache(
+        cls,
+        meta_data: MetaData,
+        cache_dir: str,
+    ) -> None:
+        file_path = cls.get_file_path(
+            canonical_file_prefix=meta_data.canonical_file_prefix,
+            file_suffix='csv',
+            cache_dir=cache_dir,
+        )
+        os.remove(file_path)
 
 
 class LocalCacher:
@@ -244,9 +280,12 @@ class LocalCacher:
                 function_source_hash = LocalCacher._get_function_source_hash(func=func)
 
                 # full hash is combination of func hash and kwarg hash
-                canonical_file_prefix = _get_canonical_file_prefix(
-                    function_source_hash=function_source_hash,
-                    kwargs_hash=call_signature_hash,
+                canonical_file_prefix = LocalCacher._get_file_prefix(
+                    func=func,
+                    passed_args=args,
+                    passed_kwargs=kwargs,
+                    use_cache_kwarg=self.use_cache_kwarg,
+                    unhashable_kwargs=self.unhashable_kwargs,
                 )
 
                 # check if cache is valid
@@ -295,6 +334,28 @@ class LocalCacher:
             return return_object
 
         return wrapper
+
+    @staticmethod
+    def _get_file_prefix(
+        func: Callable[..., Any],
+        passed_args: Tuple[Any, ...],
+        passed_kwargs: Dict[str, Any],
+        use_cache_kwarg: str,
+        unhashable_kwargs: Optional[Collection[str]],
+    ) -> str:
+        call_signature_hash = LocalCacher._get_call_signature_hash(
+            func=func,
+            passed_args=passed_args,
+            passed_kwargs=passed_kwargs,
+            use_cache_kwarg=use_cache_kwarg,
+            unhashable_kwargs=unhashable_kwargs,
+        )
+        function_source_hash = LocalCacher._get_function_source_hash(func=func)
+        file_prefix = _get_canonical_file_prefix(
+            function_source_hash=function_source_hash,
+            kwargs_hash=call_signature_hash,
+        )
+        return file_prefix
 
     @staticmethod
     def _get_full_kwargs(
@@ -377,3 +438,32 @@ class LocalCacher:
                 return handler()
         err_str = 'could not find cache handler {}'.format(cache_handler_name)
         raise LocalCacheException(err_str)
+
+    @staticmethod
+    def clear_cache(
+        cache_dir: str,
+        cache_validity_hours: int = 0,
+    ) -> None:
+        meta_data_files = [
+            f for f in os.listdir(cache_dir) if (os.path.isfile(os.path.join(cache_dir, f)) and '-meta.json' in f)
+        ]
+        for f in meta_data_files:
+            canonical_file_prefix = f.split('-meta.json')[0]
+            meta_data = MetaData.from_disk(
+                canonical_file_prefix=canonical_file_prefix,
+                cache_dir=cache_dir,
+            )
+            write_datetime = datetime.datetime.strptime(meta_data.write_datetime_str, DATETIME_FORMAT_STR)
+            days_since_write = (datetime.datetime.now() - write_datetime).days
+            seconds_since_write = (datetime.datetime.now() - write_datetime).seconds
+            hours_since_write = (seconds_since_write / (60 * 60)) + (days_since_write * 24)
+            # if cache is fresh break loop
+            if hours_since_write < cache_validity_hours:
+                continue
+            cache_handler = LocalCacher._get_cache_handler_from_meta_data(meta_data=meta_data)
+            # delete files
+            cache_handler.delete_cache(
+                meta_data=meta_data,
+                cache_dir=cache_dir,
+            )
+            meta_data.delete_meta_data(cache_dir=cache_dir)

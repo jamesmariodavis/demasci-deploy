@@ -17,7 +17,6 @@ from app_lib.utils.local_cacher import (
     DATETIME_FORMAT_STR,
     ObjectCacheHandler,
     DataFrameCacheHandler,
-    _get_canonical_file_prefix,
 )
 from app_lib.app_paths import LOCAL_CACHE_DIR
 
@@ -209,17 +208,12 @@ class TestLocalCacher(BaseTestCase):
         real_result = {1: 'a', 5: 5}
         fake_result = 'winner!'
 
-        target_f_source_hash = LocalCacher._get_function_source_hash(func=cached_f)
-        target_kwarg_hash = LocalCacher._get_call_signature_hash(
+        file_prefix = LocalCacher._get_file_prefix(
             func=cached_f,
             passed_args=(),
             passed_kwargs=kwargs,
             use_cache_kwarg=CUSTOM_USE_CACHE_KWARG,
             unhashable_kwargs=[],
-        )
-        file_prefix = _get_canonical_file_prefix(
-            function_source_hash=target_f_source_hash,
-            kwargs_hash=target_kwarg_hash,
         )
         meta_data_file = '{}-meta.json'.format(file_prefix)
         meta_data_file_path = os.path.join(LOCAL_CACHE_DIR, meta_data_file)
@@ -227,10 +221,10 @@ class TestLocalCacher(BaseTestCase):
             write_datetime_str=datetime.datetime.now().strftime(DATETIME_FORMAT_STR),
             canonical_file_prefix=file_prefix,
             cache_handler_name=ObjectCacheHandler.CACHE_HANDLER_NAME,
-            function_source_hash=target_f_source_hash,
-            kwargs_hash=target_kwarg_hash,
-            function_name=cached_f.__name__,
-            function_file_location=__file__,
+            function_source_hash='',
+            kwargs_hash='',
+            function_name='',
+            function_file_location='',
         )
 
         pickle_file_path = ObjectCacheHandler.get_file_path(
@@ -282,10 +276,10 @@ class TestLocalCacher(BaseTestCase):
             write_datetime_str=old_datetime.strftime(DATETIME_FORMAT_STR),
             canonical_file_prefix=file_prefix,
             cache_handler_name=ObjectCacheHandler.CACHE_HANDLER_NAME,
-            function_source_hash=target_f_source_hash,
-            kwargs_hash=target_kwarg_hash,
-            function_name=cached_f.__name__,
-            function_file_location=__file__,
+            function_source_hash='',
+            kwargs_hash='',
+            function_name='',
+            function_file_location='',
         )
         # write fake cache
         old_meta_data.write_to_disk(cache_dir=LOCAL_CACHE_DIR)
@@ -327,17 +321,12 @@ class TestLocalCacher(BaseTestCase):
             'c': ['a', 'b'],
         })
 
-        target_f_source_hash = LocalCacher._get_function_source_hash(func=cached_frame_f)
-        target_kwarg_hash = LocalCacher._get_call_signature_hash(
+        file_prefix = LocalCacher._get_file_prefix(
             func=cached_frame_f,
             passed_args=(),
             passed_kwargs=kwargs,
             use_cache_kwarg=CUSTOM_USE_CACHE_KWARG,
             unhashable_kwargs=[],
-        )
-        file_prefix = _get_canonical_file_prefix(
-            function_source_hash=target_f_source_hash,
-            kwargs_hash=target_kwarg_hash,
         )
         meta_data_file = '{}-meta.json'.format(file_prefix)
         meta_data_file_path = os.path.join(LOCAL_CACHE_DIR, meta_data_file)
@@ -345,10 +334,10 @@ class TestLocalCacher(BaseTestCase):
             write_datetime_str=datetime.datetime.now().strftime(DATETIME_FORMAT_STR),
             canonical_file_prefix=file_prefix,
             cache_handler_name=DataFrameCacheHandler.CACHE_HANDLER_NAME,
-            function_source_hash=target_f_source_hash,
-            kwargs_hash=target_kwarg_hash,
-            function_name=cached_frame_f.__name__,
-            function_file_location=__file__,
+            function_source_hash='',
+            kwargs_hash='',
+            function_name='',
+            function_file_location='',
         )
 
         csv_file_path = DataFrameCacheHandler.get_file_path(
@@ -393,6 +382,103 @@ class TestLocalCacher(BaseTestCase):
         for file_path in files_paths_to_clear:
             if os.path.exists(file_path):
                 os.remove(file_path)
+
+    def test_alternate_pattern(self) -> None:
+        local_cacher_instance = LocalCacher(cache_dir=LOCAL_CACHE_DIR, use_cache_kwarg=CUSTOM_USE_CACHE_KWARG)
+
+        @local_cacher_instance
+        def alt_f(
+                x: int,
+                use_cache_a_lache: bool,  # pylint: disable=unused-argument
+        ) -> int:
+            return 2 * x
+
+        kwargs = {'x': 2, CUSTOM_USE_CACHE_KWARG: True}
+
+        file_prefix = LocalCacher._get_file_prefix(
+            func=alt_f,
+            passed_args=(),
+            passed_kwargs=kwargs,
+            use_cache_kwarg=CUSTOM_USE_CACHE_KWARG,
+            unhashable_kwargs=[],
+        )
+        meta_data_file = '{}-meta.json'.format(file_prefix)
+        meta_data_file_path = os.path.join(LOCAL_CACHE_DIR, meta_data_file)
+        pickle_file_path = ObjectCacheHandler.get_file_path(
+            canonical_file_prefix=file_prefix,
+            file_suffix='pkl',
+            cache_dir=LOCAL_CACHE_DIR,
+        )
+
+        cached_files = [
+            meta_data_file_path,
+            pickle_file_path,
+        ]
+
+        # check that cache is written
+        # delete cache
+        alt_f(**kwargs)
+
+        for file_path in cached_files:
+            assert os.path.exists(file_path)
+            os.remove(file_path)
+
+    def test_clear_cache(self) -> None:
+        kwargs = {
+            'x': 1,
+            'y': 'a',
+            CUSTOM_USE_CACHE_KWARG: True,
+        }
+        file_prefix = LocalCacher._get_file_prefix(
+            func=cached_f,
+            passed_args=(),
+            passed_kwargs=kwargs,
+            use_cache_kwarg=CUSTOM_USE_CACHE_KWARG,
+            unhashable_kwargs=[],
+        )
+        meta_data_file = '{}-meta.json'.format(file_prefix)
+        meta_data_file_path = os.path.join(LOCAL_CACHE_DIR, meta_data_file)
+        pickle_file_path = ObjectCacheHandler.get_file_path(
+            canonical_file_prefix=file_prefix,
+            file_suffix='pkl',
+            cache_dir=LOCAL_CACHE_DIR,
+        )
+
+        cached_file_paths = [
+            meta_data_file_path,
+            pickle_file_path,
+        ]
+
+        # eval function to write cache
+        _ = cached_f(**kwargs)
+
+        # check files created
+        for file_path in cached_file_paths:
+            assert os.path.exists(file_path)
+
+        # overwrite meta data with very old meta data
+        lots_of_hours = 500000
+        very_old_date = datetime.datetime.now() - datetime.timedelta(hours=lots_of_hours)
+        old_meta_data = MetaData(
+            write_datetime_str=very_old_date.strftime(DATETIME_FORMAT_STR),
+            canonical_file_prefix=file_prefix,
+            cache_handler_name=ObjectCacheHandler.CACHE_HANDLER_NAME,
+            function_source_hash='',
+            kwargs_hash='',
+            function_name='',
+            function_file_location='',
+        )
+        old_meta_data.write_to_disk(cache_dir=LOCAL_CACHE_DIR)
+
+        # delete cached data using old date as filter
+        LocalCacher.clear_cache(
+            cache_dir=LOCAL_CACHE_DIR,
+            cache_validity_hours=(lots_of_hours - 1),
+        )
+
+        # check files deleted
+        for file_path in cached_file_paths:
+            assert not os.path.exists(file_path)
 
 
 if __name__ == '__main__':

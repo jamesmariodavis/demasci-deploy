@@ -8,7 +8,7 @@ import numpy as np
 
 # all floats will be rounded to DIGITS_OF_PRECISION before hashing
 DIGITS_OF_PRECISION = 8
-# hashes may appear in file names. forbid charachters that make invalid file names
+# hashes may appear in file names. forbid characters that make invalid file names
 FORBIDDEN_STRING_CHARS = ('?', '/', '\\', '<', '>', '*', '|', '"', ':')
 
 
@@ -46,8 +46,8 @@ class StringHashHandler(ObjectHashHandler):
         if isinstance(input_object, str):
             return_object = input_object
             # if forbidden char exists use hash instead
-            for charachter in FORBIDDEN_STRING_CHARS:
-                if charachter in input_object:
+            for character in FORBIDDEN_STRING_CHARS:
+                if character in input_object:
                     return_object = _hash_function(object_to_hash=input_object)
         else:
             cls.raise_type_exception(input_object=input_object)
