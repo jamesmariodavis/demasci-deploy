@@ -383,7 +383,8 @@ class TestLocalCacher(BaseTestCase):
             if os.path.exists(file_path):
                 os.remove(file_path)
 
-    def test_alternate_pattern(self) -> None:
+    @staticmethod
+    def test_alternate_pattern() -> None:
         local_cacher_instance = LocalCacher(cache_dir=LOCAL_CACHE_DIR, use_cache_kwarg=CUSTOM_USE_CACHE_KWARG)
 
         @local_cacher_instance
@@ -423,7 +424,8 @@ class TestLocalCacher(BaseTestCase):
             assert os.path.exists(file_path)
             os.remove(file_path)
 
-    def test_clear_cache(self) -> None:
+    @staticmethod
+    def test_clear_cache() -> None:
         kwargs = {
             'x': 1,
             'y': 'a',
