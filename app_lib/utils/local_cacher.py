@@ -148,14 +148,13 @@ class ObjectCacheHandler:
         file_path = os.path.join(cache_dir, file_name)
         return file_path
 
-    @classmethod
+    @staticmethod
     def serialize_to_disk(
-        cls,
         cachable_object: Any,
         meta_data: MetaData,
         cache_dir: str,
     ) -> None:
-        file_path = cls.get_file_path(
+        file_path = ObjectCacheHandler.get_file_path(
             canonical_file_prefix=meta_data.canonical_file_prefix,
             file_suffix='pkl',
             cache_dir=cache_dir,
@@ -163,13 +162,12 @@ class ObjectCacheHandler:
         with open(file_path, 'wb') as f:
             pickle.dump(obj=cachable_object, file=f)
 
-    @classmethod
+    @staticmethod
     def deserialize_from_disk(
-        cls,
         meta_data: MetaData,
         cache_dir: str,
     ) -> Any:
-        file_path = cls.get_file_path(
+        file_path = ObjectCacheHandler.get_file_path(
             canonical_file_prefix=meta_data.canonical_file_prefix,
             file_suffix='pkl',
             cache_dir=cache_dir,
@@ -178,13 +176,12 @@ class ObjectCacheHandler:
             return_object = pickle.load(file=f)
         return return_object
 
-    @classmethod
+    @staticmethod
     def delete_cache(
-        cls,
         meta_data: MetaData,
         cache_dir: str,
     ) -> None:
-        file_path = cls.get_file_path(
+        file_path = ObjectCacheHandler.get_file_path(
             canonical_file_prefix=meta_data.canonical_file_prefix,
             file_suffix='pkl',
             cache_dir=cache_dir,
@@ -213,13 +210,12 @@ class DataFrameCacheHandler(ObjectCacheHandler):
         else:
             cls.raise_type_error()
 
-    @classmethod
+    @staticmethod
     def deserialize_from_disk(
-        cls,
         meta_data: MetaData,
         cache_dir: str,
     ) -> Any:
-        file_path = cls.get_file_path(
+        file_path = DataFrameCacheHandler.get_file_path(
             canonical_file_prefix=meta_data.canonical_file_prefix,
             file_suffix='csv',
             cache_dir=cache_dir,
@@ -227,13 +223,12 @@ class DataFrameCacheHandler(ObjectCacheHandler):
         frame = pd.read_csv(filepath_or_buffer=file_path)
         return frame
 
-    @classmethod
+    @staticmethod
     def delete_cache(
-        cls,
         meta_data: MetaData,
         cache_dir: str,
     ) -> None:
-        file_path = cls.get_file_path(
+        file_path = DataFrameCacheHandler.get_file_path(
             canonical_file_prefix=meta_data.canonical_file_prefix,
             file_suffix='csv',
             cache_dir=cache_dir,
@@ -253,11 +248,13 @@ class LocalCacher:
         unhashable_kwargs: Optional[Collection[Any]] = None,
         use_cache_kwarg: str = DEFAULT_USE_CACHE_KWARG,
         cache_validity_hours: int = DEFAULT_CACHE_VALIDITY_HOURS,
+        disable_cache: bool = False,
     ):
         self.unhashable_kwargs = unhashable_kwargs
         self.use_cache_kwarg = use_cache_kwarg
         self.cache_dir = cache_dir
         self.cache_validity_hours = cache_validity_hours
+        self.disable_cache = disable_cache
 
     def __call__(self, func: Callable[..., Any]) -> Callable[..., Any]:
         @functools.wraps(func)
@@ -268,7 +265,7 @@ class LocalCacher:
                 passed_args=args,
                 passed_kwargs=kwargs,
             )
-            if self.use_cache_kwarg in full_kwargs:
+            if self.use_cache_kwarg in full_kwargs and not self.disable_cache:
                 call_signature_hash = self._get_call_signature_hash(
                     func=func,
                     passed_args=args,
@@ -340,7 +337,7 @@ class LocalCacher:
         func: Callable[..., Any],
         passed_args: Tuple[Any, ...],
         passed_kwargs: Dict[str, Any],
-        use_cache_kwarg: str,
+        use_cache_kwarg: Optional[str],
         unhashable_kwargs: Optional[Collection[str]],
     ) -> str:
         call_signature_hash = LocalCacher._get_call_signature_hash(
@@ -383,7 +380,7 @@ class LocalCacher:
         func: Callable[..., Any],
         passed_args: Tuple[Any, ...],
         passed_kwargs: Dict[str, Any],
-        use_cache_kwarg: str,
+        use_cache_kwarg: Optional[str],
         unhashable_kwargs: Optional[Collection[str]],
     ) -> str:
         # represent function call as exhaustive list of kwargs
@@ -393,7 +390,8 @@ class LocalCacher:
             passed_kwargs=passed_kwargs,
         )
         # remove use_cache_kwarg from hash to prevent thrashing loops
-        _ = full_kwargs.pop(use_cache_kwarg)
+        if use_cache_kwarg:
+            _ = full_kwargs.pop(use_cache_kwarg)
 
         # sort input kwarg keys to maintain unique hashes
         sorted_kwarg_keys = sorted(full_kwargs.keys())

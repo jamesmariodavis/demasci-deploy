@@ -51,6 +51,30 @@ def cached_f(
     return {x: y, z: z}
 
 
+@LocalCacher(
+    cache_dir=LOCAL_CACHE_DIR,
+    use_cache_kwarg=CUSTOM_USE_CACHE_KWARG,
+    cache_validity_hours=1,
+    disable_cache=True,
+)
+def disabled_cached_f(
+    x: int,
+    y: str,
+    use_cache_a_lache: bool,  # pylint: disable=unused-argument
+    z: int = 4,
+) -> Dict[int, Union[int, str]]:
+    return {x: y, z: z}
+
+
+@LocalCacher(cache_dir=LOCAL_CACHE_DIR, use_cache_kwarg=CUSTOM_USE_CACHE_KWARG, cache_validity_hours=1)
+def no_cache_kwarg_cached_f(
+    x: int,
+    y: str,
+    z: int = 4,
+) -> Dict[int, Union[int, str]]:
+    return {x: y, z: z}
+
+
 @LocalCacher(cache_dir=LOCAL_CACHE_DIR, use_cache_kwarg=CUSTOM_USE_CACHE_KWARG)
 def cached_g(
     x: int,
@@ -482,6 +506,71 @@ class TestLocalCacher(BaseTestCase):
         for file_path in cached_file_paths:
             assert not os.path.exists(file_path)
 
+    @staticmethod
+    def test_disable_cache_modes() -> None:
+        kwargs = {
+            'x': 1,
+            'y': 'a',
+            CUSTOM_USE_CACHE_KWARG: True,
+        }
+        file_prefix = LocalCacher._get_file_prefix(
+            func=disabled_cached_f,
+            passed_args=(),
+            passed_kwargs=kwargs,
+            use_cache_kwarg=CUSTOM_USE_CACHE_KWARG,
+            unhashable_kwargs=[],
+        )
+        meta_data_file = '{}-meta.json'.format(file_prefix)
+        meta_data_file_path = os.path.join(LOCAL_CACHE_DIR, meta_data_file)
+        pickle_file_path = ObjectCacheHandler.get_file_path(
+            canonical_file_prefix=file_prefix,
+            file_suffix='pkl',
+            cache_dir=LOCAL_CACHE_DIR,
+        )
+
+        cached_file_paths = [
+            meta_data_file_path,
+            pickle_file_path,
+        ]
+
+        # execute method
+        _ = disabled_cached_f(**kwargs)
+
+        # check cache not written
+        for file_path in cached_file_paths:
+            assert not os.path.exists(file_path)
+
+        kwargs = {
+            'x': 1,
+            'y': 'a',
+        }
+        file_prefix = LocalCacher._get_file_prefix(
+            func=no_cache_kwarg_cached_f,
+            passed_args=(),
+            passed_kwargs=kwargs,
+            use_cache_kwarg=None,
+            unhashable_kwargs=[],
+        )
+        meta_data_file = '{}-meta.json'.format(file_prefix)
+        meta_data_file_path = os.path.join(LOCAL_CACHE_DIR, meta_data_file)
+        pickle_file_path = ObjectCacheHandler.get_file_path(
+            canonical_file_prefix=file_prefix,
+            file_suffix='pkl',
+            cache_dir=LOCAL_CACHE_DIR,
+        )
+
+        cached_file_paths = [
+            meta_data_file_path,
+            pickle_file_path,
+        ]
+
+        # execute method
+        _ = no_cache_kwarg_cached_f(**kwargs)
+
+        for file_path in cached_file_paths:
+            assert not os.path.exists(file_path)
+
 
 if __name__ == '__main__':
+    # pytest.main(['-k', 'test_disable_cache_modes'])
     pytest.main([__file__])
