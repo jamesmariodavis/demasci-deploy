@@ -572,5 +572,4 @@ class TestLocalCacher(BaseTestCase):
 
 
 if __name__ == '__main__':
-    # pytest.main(['-k', 'test_disable_cache_modes'])
     pytest.main([__file__])
